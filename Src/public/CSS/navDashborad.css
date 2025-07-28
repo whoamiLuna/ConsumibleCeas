@@ -1,0 +1,85 @@
+.aside{
+    width: 5rem;
+    height: 100vh;
+    border: 1px solid green;
+    position:fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 0;
+    background-color: var(--color_nav);
+    color: var(--color_hoverNav);
+    letter-spacing: .2rem;
+    overflow: hidden;
+    transition: width ease-out .2s;
+    z-index: 100;
+}
+
+.aside__iconMenu{
+    cursor: pointer;
+}
+.aside__logo{
+display: flex;
+width: 25rem;
+margin-left: 0;
+margin-bottom: 4rem;
+align-items: center;
+gap: 1rem;
+}
+
+.aside__logo-img{
+width:7rem;
+object-fit: contain;
+object-position: center;
+filter: drop-shadow(0px 3px #ffffffa2);
+}
+    
+.aside__logo-text{
+    font-size: 2rem;
+    text-align: center;
+}
+
+
+/* nav items */
+
+.aside__navItems{
+    width: 25rem;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.aside__navItems-li{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+}
+
+.li__a-icon,.aside__iconMenu{
+    font-size: 2rem;    
+    margin-left: 1rem;
+    margin-right: 1rem;
+    padding: .3rem;
+}
+
+.navItems__li-a{
+    text-decoration: none;
+    font-size: 1.4rem;
+    color: inherit;
+    width: 100%;
+}
+
+/* hover and toogle class */
+
+
+.aside__active{
+    width: 25rem;
+    transition: width ease-in .2s;
+}
+
+

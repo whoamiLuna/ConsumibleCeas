@@ -1,9 +1,9 @@
 
 const keysDb= {
 host:"localhost",
-user:"root",
-password:"",
-database:"consumiblesCeas",
+user:"ceasInfo",
+password:"ceasinfo.admin",
+database:"consumiblesceas",
 }
 
 

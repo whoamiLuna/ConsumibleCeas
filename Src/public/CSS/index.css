@@ -1,0 +1,20 @@
+:root{
+    
+    font-family: "tahoma";
+    font-size: 10px;
+    --color_primary: #ec5b5b;
+    --color_hoverNav: #ffff;
+    --color_nav: #6b6969;
+    --color_linearLogin: linear-gradient(90deg,rgba(176, 106, 212, 1) 0%, rgba(194, 27, 91, 1) 50%, rgba(237, 221, 83, 1) 100%);
+    --color_errorMessage: #e42b2b;
+    --color_successMessage: #1e9445;
+    --color__boxshadow:#00000067;
+}
+
+.main{ 
+    margin-left: 5rem;
+    height: auto;
+    min-height: 100vh;
+    width: auto;
+    
+}

@@ -1,0 +1,29 @@
+doctype html
+html(lang="es")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        meta(name="autor", content="Luis Luna")
+        meta(name="keywords",content="Inventario Consumibles Reportes Impresoras Toners Tintas Cartuchos ")
+        meta(name="description", content= description)
+        link(rel="stylesheet", href="CSS/normalize.css")
+        link(rel="stylesheet", href="CSS/index.css")
+        link(rel="stylesheet", href="CSS/navDashborad.css")
+        link(rel="stylesheet", href=style)
+        title= titles
+    body
+        aside.aside 
+            figure.aside__logo
+                li.aside__iconMenu(class="fas fa-bars")
+                img.aside__logo-img(src="IMG/CEAS.png", alt="Logo")
+            if navItems.length
+                ul.aside__navItems
+                    each item in navItems   
+                        li.aside__navItems-li           
+                            a.navItems__li-a(href=item.hrefNav, title=item.spanTitle)
+                                i.li__a-icon(class=item.class_icon)
+                                span.li__a-span= item.spanTitle
+        main.main
+            block content
+        script(src="https://kit.fontawesome.com/8695bfc184.js", crossorigin="anonymous") 
+        script(src="JS/index.js", type="module")

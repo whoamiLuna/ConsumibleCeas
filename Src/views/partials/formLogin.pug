@@ -1,0 +1,12 @@
+
+
+mixin formAutentication(inputs, action, titleForm,valueBtn)
+    article.form__Content
+        form.formAutenticate(action=action, method="post", autocomplete="off")
+            h2.formAutenticate__title=titleForm
+            each input in inputs
+                div.formAutenticate__container
+                    label.formAutenticate__container-label(for= input.id)= input.labelTitle
+                    input.formAutenticate__container-input(type=input.type, placeholder=input.placeholder, name= input.name, id=input.id)
+
+            input.formAutenticate__submit(type="submit", value=valueBtn)    

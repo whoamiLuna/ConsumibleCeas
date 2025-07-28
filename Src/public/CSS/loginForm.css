@@ -1,0 +1,110 @@
+.main__formLogin{
+    width: 100%;
+    height: 100vh;
+    background: var(--color_linearLogin);
+    padding: 0;
+}
+
+.form__Content{
+width: 100%;
+height: 100vh;
+padding: 0;
+display: flex;
+justify-content: center;
+align-items: center;
+background-color: #ffffff59;
+backdrop-filter: blur(3rem);
+}
+
+
+.formAutenticate{
+    width: 38rem;
+    border-radius: 1rem;
+    height: 50rem;
+    background-color: var(--color_nav);
+    display: flex;
+    flex-flow: column;
+    justify-content: space-evenly;
+    border: 1px solid white;
+    align-items: center;
+    padding: 1rem;
+    color: white;
+    box-shadow: 3px 3px 16px var(--color__boxshadow);
+    
+    
+}
+
+.formAutenticate__title{
+    margin-bottom: 5.5rem;
+    font-size: 2rem;
+}
+
+
+.formAutenticate__container{
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-between;
+    align-items: start;
+    gap: .6rem;
+}
+
+.formAutenticate__container-input{
+    outline: none;
+    width: 100%;
+    border: none;
+    padding: .8rem;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: background-color ease-out .3s, font-size ease-in .3s, border ease .3s;
+    
+    
+}
+
+
+.formAutenticate__container-input:focus{
+    background-color: var(--color_nav);
+    font-size: 1.3rem;
+    transition: background-color ease .4s, font-size ease-in-out .3s, border ease-in .4s;
+    color: white;
+    border: 1px solid white;
+}
+
+.formAutenticate__container-input:focus::placeholder{
+    color: white;
+}
+
+
+.formAutenticate__container-label{
+    font-size: 1.5rem;
+}
+
+.formAutenticate__submit{
+    width: 20rem;
+    outline: none;
+    border: 1px solid whitesmoke;
+    padding: .6rem;
+    text-align: center;
+    cursor: pointer;
+    font-size: 1.5rem;
+    border-radius: 1rem;
+    background-color: gray;
+    color: white;
+    transition: background-color ease-in .3s, color ease .2s;
+}
+
+.formAutenticate__submit:hover{
+    background-color: white;
+    color: black;
+    transition: background-color ease .3s, color ease-in .3s;
+}
+
+
+/* responsive */
+ 
+@media screen and (max-width:600px) {
+    .formAutenticate{
+        width: 33.3rem;
+    }
+}
