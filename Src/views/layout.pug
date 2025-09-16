@@ -1,3 +1,5 @@
+include ./partials/notifications.pug
+
 doctype html
 html(lang="es")
     head
@@ -6,24 +8,35 @@ html(lang="es")
         meta(name="autor", content="Luis Luna")
         meta(name="keywords",content="Inventario Consumibles Reportes Impresoras Toners Tintas Cartuchos ")
         meta(name="description", content= description)
-        link(rel="stylesheet", href="CSS/normalize.css")
-        link(rel="stylesheet", href="CSS/index.css")
-        link(rel="stylesheet", href="CSS/navDashborad.css")
+        link(rel="shortcut icon", href="/IMG/CEAS.ico", type="image/x-icon")
+        link(rel="stylesheet", href="/CSS/normalize.css")
+        link(rel="stylesheet", href="/CSS/index.css")
+        link(rel="stylesheet", href="/CSS/navDashborad.css")
+        link(rel="stylesheet", href="/CSS/notifications.css")
         link(rel="stylesheet", href=style)
+        if formShowInputs && formShowInputs.length && formShowAdd && Object.keys(formShowAdd).length
+            link(rel="stylesheet", href="/CSS/formShowAdd.css")
+
         title= titles
     body
         aside.aside 
             figure.aside__logo
                 li.aside__iconMenu(class="fas fa-bars")
-                img.aside__logo-img(src="IMG/CEAS.png", alt="Logo")
+                img.aside__logo-img(src="/IMG/CEAS.png", alt="Logo")
             if navItems.length
                 ul.aside__navItems
+                    if errorMessage && errorMessage.length > 0 && successMessage && successMessage.length > 0
+                        span.navItems__li-a.btn__notification(title="Notificaciones")
+                                i.li__a-icon(class="fas fa-bell")
+                                span.li__a-span Notificaciones
                     each item in navItems   
                         li.aside__navItems-li           
                             a.navItems__li-a(href=item.hrefNav, title=item.spanTitle)
                                 i.li__a-icon(class=item.class_icon)
                                 span.li__a-span= item.spanTitle
         main.main
-            block content
-        script(src="https://kit.fontawesome.com/8695bfc184.js", crossorigin="anonymous") 
-        script(src="JS/index.js", type="module")
+            +notifications(errorMessage,successMessage)
+            block content   
+        script(src="https://kit.fontawesome.com/8695bfc184.js", crossorigin="anonymous")
+        script(src=Script, type="module")
+        script(src="/JS/index.js", type="module")

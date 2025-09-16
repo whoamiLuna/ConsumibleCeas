@@ -40,7 +40,7 @@ if(!searchUser.length > 0){
              done(null, userSession,req.flash("SuccessMessage",`El usuario ${username} se ha creado satisfactoriamente`)) 
          }else{
            
-          donde(null,false, req.flash("ErrorMessage","Error al crear al usuario en la base de datos")) 
+          done(null,false, req.flash("ErrorMessage","Error al crear al usuario en la base de datos")) 
          }
          
 
@@ -97,4 +97,4 @@ if(searchLoginUser.length > 0){
  done(null, false, req.flash("ErrorMessage", `El usuario ${username} no existe, intente de nuevo`))
 }
 
-}))
+}))  

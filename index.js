@@ -64,9 +64,9 @@ app.use(passport.session())
 //?globals
 
 app.use((req,res,next)=>{
-    res.locals.errorMessage= req.flash("ErrorMessage")
+    res.locals.errorMessage= req.flash("ErrorMessage") || []
     res.locals.errorFormAuth= req.flash("ErrorFormAuth")
-    res.locals.successMessage= req.flash("successMessage")
+    res.locals.successMessage= req.flash("successMessage") || []
     res.locals.user=req.user
     
     next()

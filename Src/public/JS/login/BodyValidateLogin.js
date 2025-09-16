@@ -2,7 +2,7 @@ import { body } from "express-validator";
 
 
 
-const bodyElementsLogin = [
+const bodyValidateLogin = [
     body("username").notEmpty().withMessage("El campo usuario no debe estar vacio").trim().escape(),
     body("password").notEmpty().withMessage("La contraseña no debe estar vacia").trim().escape()
 ]

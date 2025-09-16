@@ -1,0 +1,24 @@
+
+
+mixin showFormAdd(formShowAdd,formShowInputs)
+    article.formContainerShow
+        form.showForm(action=formShowAdd.action, method=formShowAdd.method, autocomplete="off")
+            h3.showForm__title= formShowAdd.title
+            div.showForm__inputs
+                each input in formShowInputs 
+                    div.showForm__containerInput
+                        label.showForm__containerInput-label(id=input.id)
+                            i.containerInput__label-icon(class=input.classIcon)
+                        input.showForm__containerInput-input(type=input.type,placeholder=input.placeholder,name=input.name,id=input.id)
+                if formShowAdd.selected.length > 0  
+                    each select in formShowAdd.selected 
+                        div.showForm__containerInput
+                            label.showForm__containerInput-label(id=select.id)
+                                i.containerInput__label-icon(class=select.class__icon)
+                            select.showFormSelect(id=select.id, name=select.name required)
+                                option.showForm__containerInput-option(name=select.defaultOption, selected , disabled)=select.defaultOption
+                                if select.options.length > 0
+                                    each option in select.options
+                                        option.showForm__containerInput-option(name=option.value)= option.value
+            input.showForm__submit(type="submit", value=formShowAdd.valueSubmit)
+            span.showForm__crossClose ❌        

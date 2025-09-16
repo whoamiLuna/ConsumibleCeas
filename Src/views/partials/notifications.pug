@@ -1,0 +1,19 @@
+
+mixin notifications(errors,success)
+    article.notifications
+        div.notifications__content
+            i.content__titles-icon(class="fas fa-bell")
+            h3.conten__titles-title NOTIFICACIONES 
+        div.notifications__msg
+            if errors && errors.length > 0
+                each err in errors
+                     div.notifications__msg-message.error
+                        span.msg__message-content= err.msg
+                        i.msg__message-icon(class="fas fa-exclamation")
+            else if success && success.length 
+                each valid in success 
+                    div.notifications__msg-message.success
+                        span.msg__message-content= valid
+                        i.msg__message-icon(class="fas fa-exclamation")
+                  
+

@@ -1,0 +1,161 @@
+.formContainerShow{
+    visibility: hidden;
+    transform: scale(0);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: transparent;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: visibility ease .5s, transform ease .4s;
+}
+
+.showForm{
+    position: relative;
+    width: 34rem;
+    height: 44rem;
+    display: flex;
+    flex-flow: column nowrap;
+    background-color: var(--color_navObscure);
+    justify-content: space-evenly;
+    align-items: center;
+    border-radius: 2rem;
+    box-shadow: 2px 3px 4px var(--color__boxshadow);
+}
+
+.showForm__title{
+    font-size: 2.12rem;
+    color: white;
+    padding: 0;
+}
+
+.showForm__inputs{
+    width: 100%;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+    gap:2rem;
+}
+
+/* inputs and select */
+
+.showForm__containerInput{
+    display: flex;
+    gap: .65rem;
+    width:100%;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+input.showForm__containerInput-input{
+    width: 80%;
+    height: 1.5rem;
+    padding: 1.3rem;
+    border: none;
+    font-size: 1.24rem;
+    outline: none;
+    color: gray;
+    
+}
+
+.showForm__containerInput-input::placeholder{
+    color: gray;
+}
+
+.containerInput__label-icon{
+    padding: 0;
+    font-size: 1.58rem;
+    color: white;
+} 
+
+
+
+/* select */
+select.showFormSelect{
+    width: 80%;
+    height: 2.8rem;
+    outline: none;
+    color: gray;
+    font-size: 1.24rem;
+
+}
+
+
+select.showFormSelect > option:checked{
+    background-color: var(--color_navObscure); 
+    color: whitesmoke;
+   
+}
+
+
+/* hovers and transiktions inputs select */
+
+.showForm__containerInput-input:focus,.showFormSelect:focus{
+background-color: var(--color_nav);
+color: white;
+transition: background-color ease-in .3s,color ease .3s;
+}
+
+.showForm__containerInput-input:focus::placeholder{
+    color: white;
+    transition: color ease-out .3s
+}
+
+ 
+
+/* btn close */ 
+
+.showForm__crossClose{
+position: absolute;
+top: -1rem;
+right: -.6rem;
+padding: 1.2rem;
+text-align: center;
+background-color: white;
+border: 2px solid black;
+border-radius: 50%;
+font-size: 1.3rem;
+cursor: pointer;
+}
+
+
+
+/* btn submit */
+
+.showForm__submit{
+    width: 40%;
+    outline: none;
+    border: none;
+    border-radius: 1.2rem;
+    text-align: center;
+    padding: 1rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--color_navObscure);
+    transition: background-color ease .3s, color ease-in .3s, border ease .3s;
+}
+
+.showForm__submit:hover{
+    color: white;
+    background-color: var(--color_navObscure);
+    border: 2px solid whitesmoke;
+    transition: background-color ease-in .3s,color ease .3s, border ease-in-out .3s;
+}
+
+
+
+/* active form */
+
+.formContainerShow-active{
+    visibility: visible;
+    transform: scale(1);
+    transition: visibility ease-in .5s,transform ease .4s;
+}
+

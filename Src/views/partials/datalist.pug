@@ -1,0 +1,9 @@
+
+
+mixin dataListSearch(datalistSearch,optionsData)
+    form.formDataList(method=datalistSearch.method, action=datalistSearch.action)
+        input.formDataList__search(type="text", name=datalistSearch.name,list=datalistSearch.id placeholder=datalistSearch.placeholderSearch)
+        input.formDataList__submit(type="submit", value=datalistSearch.submit)
+        datalist.formDataList__datalist(id=datalistSearch.id)
+            each value in optionsData
+                 option.formDataList__datalist-option= value.fullname       

@@ -1,0 +1,101 @@
+.main__adminUser{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-flow: column nowrap;
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+}
+
+.main__adminUser-head{
+    width: 100%;
+    height: 23rem;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+}
+
+.adminUser__title{
+    font-size: 2.7rem;
+}
+.adminUser__containerList{
+    width: 100%;
+    height: auto;
+    min-height: 10rem;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 2.4rem;
+}
+
+
+.formDataList{
+    width: 40rem;
+    padding: 2.4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.6rem;
+}
+
+
+.formDataList__search{
+    width:  20rem;
+    border: 2px solid black;
+    outline: none;
+    padding: .5rem; 
+    font-size: 1.1rem;
+    border-radius: 10px;
+    transition: ease-in-out background-color .4s,  ease-in color .3s, ease padding .3s;
+}
+
+.formDataList__submit{
+    outline: none;
+    border: none;
+    padding: .7rem;
+    background-color: var(--color_nav);
+    color: white;
+    font-size: 1.1rem;
+    width: 6rem;
+    border-radius: 10px;
+    cursor: pointer;
+    
+}
+
+
+.formDataList__search:focus{
+    background-color: var(--color_nav);
+    color: white;
+    padding: .7rem;
+    transition: ease-in background-color .4s, ease color .4s,ease-out padding .3s;
+}
+
+.formDataList__search:focus::placeholder{
+    color: white;
+}
+
+.adminUser__containerList-adduser{
+    width: 15rem;
+    padding: .7rem;
+    background-color: var(--color_nav);
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+    text-decoration: none;
+    font-size: 1.4rem;
+    border-radius: 1.8rem;
+    transition: ease background-color .3s;
+}
+
+.adminUser__containerList-adduser:hover{
+    background-color: var(--color_navObscure);
+    transition: ease-out background-color .4s;
+}
+

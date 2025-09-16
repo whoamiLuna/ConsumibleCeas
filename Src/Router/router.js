@@ -15,4 +15,6 @@ router.get("/404",(req,res)=>{
     res.send("404 NO EXISTE ESTA PAGINA")
 })
 
+
+
 export default router

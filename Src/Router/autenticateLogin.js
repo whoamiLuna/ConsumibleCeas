@@ -1,8 +1,5 @@
 import { Router } from "express";
 import passport from "passport";
-import isAuthLogin from "../Helpers/isAutenticate.js";
-import bodyElementsLogin from "../public/JS/login/BodyElementLogin.js";
-import validateBodyPost from "../Helpers/ExpressValidator.js";
 import { body, validationResult } from "express-validator";
 
 
@@ -40,7 +37,7 @@ switch (role) {
 RouterAuth.get("/",(req,res,next)=>{
     req.logOut(err=>{
         if(err) return next(err)
-        
+            
         res.render("autenticate/login.pug",{
         description:"INICIAR SESION EN CONSUMIBLES CEAS",
         style:"CSS/loginForm.css",
@@ -74,15 +71,6 @@ RouterAuth.get("/",(req,res,next)=>{
 
 
 
-//?restrict
-RouterAuth.get("/restrict",(req,res)=>{
-    res.send("NO autorizado")
-})
-
-
-
-
-
 
 
 
@@ -96,6 +84,29 @@ RouterAuth.post("/",passport.authenticate("local.login",{
    failureRedirect:"/login", 
    failureFlash:true 
 }))
+
+
+
+
+
+//todo post passport and validate singup
+
+ 
+
+
+
+
+
+
+
+
+
+
+//?restrict
+RouterAuth.get("/restrict",(req,res)=>{
+
+    res.send("NO autorizado")
+})
 
 
 

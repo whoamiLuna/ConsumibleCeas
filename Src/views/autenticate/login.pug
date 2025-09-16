@@ -3,11 +3,6 @@ include ../partials/formLogin.pug
 
 block content
   section.main__formLogin
-    if errorMessage.length
-      article.main__formLogin-errors
-        each err in errorMessage
-          div.formLogin__error-container
-            span.error__container-msg= err
 
 
     +formAutentication(inputs, action, titleForm, valuebtn)

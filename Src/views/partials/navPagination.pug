@@ -1,0 +1,7 @@
+mixin navPagination(page,totalPage)
+    if page > 1
+        a.navBtnBefore(href=`/admin/users?page=${page -1}`, title="Anterior") Anterior
+    each num in [...Array(totalPage).keys().map(n => n + 1)]
+        a.navBtnPage(href=`/admin/users?page=${num}`, title=`pagina ${num}`, class=(num=== page ? "navBtnActive" : ""))
+    if page < totalPage
+        a(href=`/admin/users?page=${page + 1}` title=`Siguiente`) Siguiente

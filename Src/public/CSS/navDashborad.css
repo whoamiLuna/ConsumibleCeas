@@ -1,7 +1,6 @@
 .aside{
     width: 5rem;
     height: 100vh;
-    border: 1px solid green;
     position:fixed;
     left: 0;
     top: 0;
@@ -58,12 +57,13 @@ filter: drop-shadow(0px 3px #ffffffa2);
     justify-content: flex-start;
     align-items: center;
     gap: 1rem;
+    margin: 1.7rem 0;
 }
 
 .li__a-icon,.aside__iconMenu{
     font-size: 2rem;    
     margin-left: 1rem;
-    margin-right: 1rem;
+    margin-right: 1.45rem;
     padding: .3rem;
 }
 
@@ -72,6 +72,7 @@ filter: drop-shadow(0px 3px #ffffffa2);
     font-size: 1.4rem;
     color: inherit;
     width: 100%;
+    cursor: pointer;
 }
 
 /* hover and toogle class */
