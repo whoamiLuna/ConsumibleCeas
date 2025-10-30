@@ -22,7 +22,6 @@ function btnShowForm(classBtn, classFormShow,classStyleAdd, classFormClose){
     })
     
     const close= btnClose.addEventListener("click", (e)=>{
-        console.log(e.target)
          formShow.classList.remove(classStyleAdd)
     })
 

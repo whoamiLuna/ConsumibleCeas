@@ -1,0 +1,126 @@
+.tableContent{
+    width: 80%;
+    height: auto;
+    background:#f0eeee;
+    border-radius: 1rem;
+    box-shadow: 2px 3px 7px var(--color__boxshadow);
+    padding: 0;
+    border: none; 
+    border-spacing: 0px;
+}   
+
+/* *header table */
+
+.tableContent__head{
+     width: 100%;
+     height: 10rem;
+     background-color: var(--color_navObscure);
+     border-radius: 1rem;
+     text-align: center;
+     box-shadow: 0px 1px 3px var(--color__boxshadow);
+
+}
+
+
+.tableContent__head-head{
+    color: white;
+    font-size: 1.4rem;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 1.8px;
+}
+
+.tableContent__head-head .tableContent__head-th:nth-child(1){
+    border-radius: 1rem  0px 0px 0px;
+}
+
+.tableContent__head-head .tableContent__head-th:nth-last-child(1){  
+    border-radius: 0rem  1rem 0rem 0rem;
+}
+/* *body */
+
+.tableContent__row{
+    width: 100%;  
+    height: 6rem;
+}
+
+.tableContent__row-row{
+    border-bottom: 1.3px solid #cecccc; 
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+
+
+
+
+
+
+
+
+/* ! styles class add particular value */
+
+
+.Capturista{
+    background-color: #fff068;
+    border-radius: 1rem;
+    padding: 1rem;
+    color: rgb(155, 155, 155);  
+    font-weight: bold;
+}
+
+.Cliente{
+    background-color: #86baff;
+    font-weight: bold;
+    padding: 1rem;
+    color: white;
+    border-radius: 1rem;
+}
+
+
+/*? responsive */
+
+
+@media screen and (max-width: 1074px) {
+
+    .tableContent__row-row,.tableContent__row,.tableContent__body,.tableContent__head,.tableContent__head-head, .tableContent__head-th{
+        display: block;
+    }
+
+    .tableContent__row{
+        height: auto;
+    }
+
+    .tableContent__row-row{
+        width: 100%;
+        padding: .9rem;
+        display: flex;
+        justify-content:space-between;
+        align-items: center;
+    }
+
+    .tableContent__row .tableContent__row-row:nth-child(1){
+        background-color: #b1b0b0;
+    }
+
+    
+
+    .tableContent{
+        width: 30rem;
+    }
+
+    .tableContent__head{
+        display: none;
+    }
+
+    .tableContent__row-row::before{
+        content: attr(data-head) ":";
+        margin-left: 1rem;
+
+    }
+
+    .tableContent__row-span{
+        margin-right: 1rem;
+    }
+
+}

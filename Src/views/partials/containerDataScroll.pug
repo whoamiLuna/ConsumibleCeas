@@ -1,0 +1,16 @@
+
+include .\formShowAdd.pug
+
+mixin containerData(containerData,dataListSearch,optionsData)
+    nav.containerHead
+        if containerData.optionsBtn.length > 0
+            div.contaonerHead__options
+                each btn in containerData.optionsBtn 
+                    a.containerHead__options-btn(href=btn.href, title= btnTitle)= btn.contentText 
+        if dataListSearch && optionsData.length > 0
+            +showFormAdd(dataListSearch,optionsData)
+    div.containerContent
+        if containerData.itemsData.length > 0
+            each item in containerData
+                div.containerContent__item
+                    p.container__item-text= item.text

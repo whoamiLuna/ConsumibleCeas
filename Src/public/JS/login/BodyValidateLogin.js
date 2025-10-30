@@ -7,4 +7,4 @@ const bodyValidateLogin = [
     body("password").notEmpty().withMessage("La contraseña no debe estar vacia").trim().escape()
 ]
 
-export default bodyElementsLogin        
+export default bodyValidateLogin      

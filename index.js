@@ -11,9 +11,9 @@ import passport from "passport"
 import router from "./Src/Router/router.js"
 import RouterAuth from "./Src/Router/autenticateLogin.js"
 import keysDb from "./Src/Helpers/dbData.js"
-import "./Src/Helpers/passport.js"
 import routeCapturista from "./Src/Router/capturista.js"
 import routeAdmin from "./Src/Router/admin.js"
+import "./Src/Helpers/passport.js"
 
 //todo app
 const app=express()
@@ -64,7 +64,7 @@ app.use(passport.session())
 //?globals
 
 app.use((req,res,next)=>{
-    res.locals.errorMessage= req.flash("ErrorMessage") || []
+    res.locals.errorMessage= req.flash("errorMessage") || []
     res.locals.errorFormAuth= req.flash("ErrorFormAuth")
     res.locals.successMessage= req.flash("successMessage") || []
     res.locals.user=req.user

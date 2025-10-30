@@ -16,7 +16,11 @@ html(lang="es")
         link(rel="stylesheet", href=style)
         if formShowInputs && formShowInputs.length && formShowAdd && Object.keys(formShowAdd).length
             link(rel="stylesheet", href="/CSS/formShowAdd.css")
-
+        if dataHead && dataHead.length > 0
+            link(rel="stylesheet", href="/CSS/tableContent.css")
+        if page && totalPage
+            link(rel="stylesheet", href="/CSS/navPagination.css")
+    
         title= titles
     body
         aside.aside 
@@ -25,7 +29,7 @@ html(lang="es")
                 img.aside__logo-img(src="/IMG/CEAS.png", alt="Logo")
             if navItems.length
                 ul.aside__navItems
-                    if errorMessage && errorMessage.length > 0 && successMessage && successMessage.length > 0
+                    if errorMessage && errorMessage.length > 0 ||  successMessage && successMessage.length > 0
                         span.navItems__li-a.btn__notification(title="Notificaciones")
                                 i.li__a-icon(class="fas fa-bell")
                                 span.li__a-span Notificaciones

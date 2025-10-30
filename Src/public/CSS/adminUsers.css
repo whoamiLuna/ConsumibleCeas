@@ -6,6 +6,7 @@
     width: 100%;
     height: auto;
     min-height: 100vh;
+    gap: 3rem;
 }
 
 .main__adminUser-head{
@@ -21,6 +22,8 @@
 .adminUser__title{
     font-size: 2.7rem;
 }
+
+/* ? search user */
 .adminUser__containerList{
     width: 100%;
     height: auto;
@@ -98,4 +101,19 @@
     background-color: var(--color_navObscure);
     transition: ease-out background-color .4s;
 }
+
+
+
+/*? users sections  */
+.main__adminUser-users{
+    width: 100%;
+    min-height: 80vh; 
+    height: auto;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+
 

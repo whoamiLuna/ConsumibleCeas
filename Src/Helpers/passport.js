@@ -5,54 +5,65 @@ import { encryptPassword, comparePassword } from "./brcript.js";
 
 
 passport.use("local.signup",new Strategy({
-     usernameField: "password",
-     passwordField: "username",
+     usernameField: "username",
+     passwordField: "password",
      passReqToCallback: true
 },async (req,username,password,done)=>{
     
 const {fullname, role} = req.body
 
 
-const [searchUser]= await pool.query("select username from users where username= ?",[username])
+const [searchUser]= await pool.query("select username, fullname from users where username= ? OR fullname = ?",[username,fullname])
 
-if(!searchUser.length > 0){
 
-     const encrypt = await encryptPassword(password)
+if(searchUser.length > 0){
+     req.flash("errorMessage", `El usuario ${username} o el nombre de usuario ${fullname} ya existen, intente con un nuevo usuario`)
+     return done(null,false)
+}
 
-     if(encrypt.length){
-          
-          const newUser= {
-               username,
-               password: encrypt,
-               fullname,
-               role
+const encrypt = await encryptPassword(password)
+
+
+if(!encrypt){
+     req.flash("errorMessage","Hubo un error en la encriptacion de la contraseña, intente de nuevo")
+     return done(null,false)
+}
+
+
+     const newUser= {
+          username,
+          password: encrypt,
+          fullname,
+          role
           }
+
+     const [userAdd] = await pool.query("insert into users set ?", [newUser])
+       
+
+     if(userAdd.affectedRows > 0){
           
-          const [userAdd] = await pool.query("insert into users set ?", [newUser])
-          
-          if(userAdd.affectedRows > 0){
-              
               const userSession= {
               ...newUser,
               id_user: userAdd.insertId
              }
-             
-             done(null, userSession,req.flash("SuccessMessage",`El usuario ${username} se ha creado satisfactoriamente`)) 
+             req.flash("successMessage",`El usuario ${username} se ha creado satisfactoriamente`)
+             return done(null, false) 
          }else{
-           
-          done(null,false, req.flash("ErrorMessage","Error al crear al usuario en la base de datos")) 
+               req.flash("errorMessage","Error al crear al usuario en la base de datos")
+               return done(null,false) 
          }
          
 
+     
+     
 
-     }
-     
-}else{
-     done(null,false, req.flash("ErrorMessage", `el usuario ${username} o fullname ya existe, intente con un usuario nuevo`))
-}
-     
 
 }))
+
+
+
+
+
 
 
 //todo Serializar usuario
@@ -62,16 +73,21 @@ passport.serializeUser((user, done)=>{
 })
 
 
-//todo consulta usuario
+
+
+//todo consulta usuario, deserializar usuario
 
 
 passport.deserializeUser(async(id,done)=>{
-     
      const [userConsutl]= await pool.query("select * from users where id_user= ?", [id])
-
      userConsutl.length > 0 ? done(null,userConsutl[0]) : done(null,false)
 
 })
+
+
+
+
+
 
 
 
@@ -91,10 +107,16 @@ if(searchLoginUser.length > 0){
      
      const passwordDecrypt= await comparePassword(password,userFind.password)
 
-     passwordDecrypt === true ? done(null,userFind) : done(null, false, req.flash("ErrorMessage", "Contraseña incorrecta, vuelva a intentarlo"))
+     if(passwordDecrypt === true){
+          return done(null,userFind)
+     }else{
+          req.flash("errorMessage", "Contraseña incorrecta, vuelve a intentarlo")
+          return done(null,false)
+     }
           
 }else{
- done(null, false, req.flash("ErrorMessage", `El usuario ${username} no existe, intente de nuevo`))
+      req.flash("errorMessage", `El usuario ${username} no existe, intente de nuevo`)
+      return done(null, false)
 }
 
 }))  

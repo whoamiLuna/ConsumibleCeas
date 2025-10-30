@@ -2,10 +2,10 @@ import { body } from "express-validator";
 
 
 const  bodyValidateAddUsers=[
-     body("user").withMessage("Debe contener un nombre de usuario").notEmpty().trim().escape(),
-     body("fullname").withMessage("Debe contener un nombre completo").notEmpty().trim().escape(),
-     body("password").withMessage("Debe contener una contraseña").notEmpty().trim().escape(),
-     body("role").withMessage("Debe contener una contraseña").notEmpty().trim().escape()
+     body("username").notEmpty().withMessage("El usuario no debe estar vacio").trim().escape().isLength({max:25}).withMessage("EL nombre de usuario no debe ser mas de 25 caracteres"),
+     body("fullname").notEmpty().withMessage("El fullname no debe estar vacia").trim().escape().isLength({max:100}).withMessage("El fullname no debe tener mas de 100 caracteres"),
+     body("password").notEmpty().withMessage("La contraseña no debe estar vacia").trim().escape().isLength({min:6}).withMessage("La contraseña debe tener al menos 6 caracteres"),
+     body("role").notEmpty().withMessage("El role no debe estar vacio").trim().escape()
 ]
 
 

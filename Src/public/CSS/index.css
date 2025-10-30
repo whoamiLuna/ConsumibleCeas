@@ -11,13 +11,15 @@
     --color_errorMessage: #e42b2b;
     --color_successMessage: #1e9445;
     --color__boxshadow:#00000067;
-}
+    --color__textStrong:#555555;
+}   
+
 
 .main{  
     margin-left: 5rem;
     height: auto;
     min-height: 100vh;
-    width: auto;
-   
+    width:auto;
+    overflow: hidden;
     
 }

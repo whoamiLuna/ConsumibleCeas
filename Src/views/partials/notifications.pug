@@ -8,12 +8,12 @@ mixin notifications(errors,success)
             if errors && errors.length > 0
                 each err in errors
                      div.notifications__msg-message.error
-                        span.msg__message-content= err.msg
                         i.msg__message-icon(class="fas fa-exclamation")
+                        span.msg__message-content= err
             else if success && success.length 
                 each valid in success 
                     div.notifications__msg-message.success
-                        span.msg__message-content= valid
                         i.msg__message-icon(class="fas fa-exclamation")
+                        span.msg__message-content= valid
                   
 

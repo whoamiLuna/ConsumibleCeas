@@ -1,0 +1,24 @@
+
+
+
+mixin tableContent(dataContent, dataHead, textNotFound)
+    if dataContent && dataContent.length > 0 && dataHead && dataHead.length > 0
+        table.tableContent
+            thead.tableContent__head
+                tr.tableContent__head-head
+                    th.tableContent__head-th No.
+                    each head in dataHead
+                        th.tableContent__head-th=  head.valueHeadText 
+            tbody.tableContent__body 
+                each row, i in dataContent
+                        tr.tableContent__row
+                            td.tableContent__row-row(data-head="No")
+                                 span.tableContent__row-span=i + 1
+                            each head in dataHead
+                                - let cellValue= row[head.key]
+                                - let cellClass= head.cellClass? head.cellClass(cellValue) : ""
+                                td.tableContent__row-row(data-head=head.valueHeadText )
+                                    span.tableContent__row-span(class=cellClass)= cellValue
+    else 
+        h3.tableContent__noFound= textNotFound
+    

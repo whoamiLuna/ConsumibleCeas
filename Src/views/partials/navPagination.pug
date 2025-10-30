@@ -1,7 +1,36 @@
-mixin navPagination(page,totalPage)
-    if page > 1
-        a.navBtnBefore(href=`/admin/users?page=${page -1}`, title="Anterior") Anterior
-    each num in [...Array(totalPage).keys().map(n => n + 1)]
-        a.navBtnPage(href=`/admin/users?page=${num}`, title=`pagina ${num}`, class=(num=== page ? "navBtnActive" : ""))
-    if page < totalPage
-        a(href=`/admin/users?page=${page + 1}` title=`Siguiente`) Siguiente
+//- mixin navPagination(page, totalPage)
+mixin navPagination(page, totalPage)
+    if totalPage > 1
+        -
+            // 🔹 Calcula los límites visibles (sin contar la primera ni la última)
+            const start = Math.max(2, page - 2)
+            const end = Math.min(totalPage - 1, page + 2)
+            // 🔹 Genera el rango visible
+            const pageRange = Array(end - start + 1).fill().map((_, i) => start + i)
+
+        nav.pagination
+            // 🔙 Botón anterior
+            if page > 1
+                a.pagination__prev(href=`?page=${page - 1}`) Anterior
+
+            // 🔹 Primera página
+            a.pagination__btn(href=`?page=1`, class=(page === 1 ? 'active' : '')) 1
+
+            // 🔸 Puntos suspensivos (si hay salto desde el inicio)
+            if start > 2
+                span.pagination__dots … 
+
+            // 🔹 Rango dinámico (centrado en la página actual)
+            each num in pageRange
+                a.pagination__btn(href=`?page=${num}`,class=(num === page ? 'active' : ''))= num
+
+            // 🔸 Puntos suspensivos (si hay salto antes del final)
+            if end < totalPage - 1
+                span.pagination__dots …
+
+            // 🔹 Última página
+            a.pagination__btn(href=`?page=${totalPage}`,class=(page === totalPage ? 'active' : ''))= totalPage
+
+            // 🔜 Botón siguiente
+            if page < totalPage
+                a.pagination__next(href=`?page=${page + 1}`) Siguiente

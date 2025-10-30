@@ -11,20 +11,10 @@
     flex-flow: column nowrap;
     justify-content: space-around;
     align-items: center;
+    z-index: 100;
 }
 
 
-.notifications__close{
-    position: absolute;
-    right: 3rem;
-    top: 3rem;
-    padding: 1.4rem;
-    font-size: 1.4rem;
-    background-color: whitesmoke;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid black;
-}
 
 
 .notifications__content{
@@ -43,11 +33,57 @@
 .notifications__msg{
     width: 100%;
     height: auto;
-
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    flex-flow: column nowrap;
+    gap: 2rem;
 }
 
 
+
+.notifications__msg-message{
+    width: 85%;
+    height: auto;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    border-radius: 1rem;
+    border: 1.4px solid white;
+    color: white;
+    font-size: 1.18rem;
+}
+
+.error{
+    background-color: var(--color_errorMessage);
+}
+
+.success{
+     background-color: var(--color_successMessage);
+}
+
+/* * class active */
 .notifications__active{
     transform: translateX(0);
     transition: transform ease .4s;
+}
+
+
+
+/** responsive desing  */
+
+
+@media screen and (max-width: 600px) {
+    .notifications{
+        width: 30rem;
+        transform: translateX(30rem);
+        transition: transform ease-in .3s;
+    }
+
+    .notifications__active{
+        transform: translateX(0);
+        transition: transform ease .3s;
+    }
 }

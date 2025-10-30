@@ -1,6 +1,8 @@
 import { Router } from "express";
 import passport from "passport";
-import { body, validationResult } from "express-validator";
+import bodyValidateLogin from "../public/JS/login/BodyValidateLogin.js";
+import validateExpressErrors from "../Helpers/expressValidatorErrors.js";
+import bodyValidateAddUsers from "../public/JS/admin/bodyValidateAddUsers.js";
 
 
 const RouterAuth= Router()
@@ -41,6 +43,7 @@ RouterAuth.get("/",(req,res,next)=>{
         res.render("autenticate/login.pug",{
         description:"INICIAR SESION EN CONSUMIBLES CEAS",
         style:"CSS/loginForm.css",
+        Script: "JS/login/loginJs.js",
         titles:"LOGIN",
         navItems:[{
             class_icon: "fas fa-sign-in-alt",
@@ -79,7 +82,10 @@ RouterAuth.get("/",(req,res,next)=>{
 
 //todo post passport and validate login
 
-RouterAuth.post("/",passport.authenticate("local.login",{
+RouterAuth.post("/",
+    bodyValidateLogin,
+    validateExpressErrors("/login"),
+    passport.authenticate("local.login",{
    successRedirect:"/login/roles",
    failureRedirect:"/login", 
    failureFlash:true 
@@ -89,10 +95,21 @@ RouterAuth.post("/",passport.authenticate("local.login",{
 
 
 
+
+
+
+
 //todo post passport and validate singup
 
  
-
+RouterAuth.post("/signUp",
+    bodyValidateAddUsers,
+    validateExpressErrors("/admin/users"),
+    passport.authenticate("local.signup",{
+    successRedirect:"/admin/users",
+    failureRedirect:"/admin/users",
+    failureFlash:true
+}))
 
 
 

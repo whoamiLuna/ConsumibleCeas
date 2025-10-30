@@ -2,6 +2,8 @@ extends ../layout.pug
 include ../partials/datalist.pug
 include ../partials/navPagination.pug
 include ../partials/formShowAdd.pug
+include ../partials/tableContent.pug
+
 
 block content
     if formShowAdd && formShowInputs 
@@ -10,29 +12,10 @@ block content
         article.main__adminUser-head
             h1.adminUser__title USUARIOS AGREGADOS
             div.adminUser__containerList
-                +dataListSearch(dataListSearch,usersAll)
+                +dataListSearch(dataListSearch,usersFullSearch)
                 a.adminUser__containerList-adduser(href="/admin/users/add")
                     i.containerList__adduser-icon(class="fas fa-user-plus")
                     = "Agregar Usuario"
         article.main__adminUser-users
-            if usersAll.length > 0
-                table.adminUser__users-tableUser 
-                    thead.users__tableUser-thead
-                        th.tableUser__thead-th No.
-                        th.tableUser__thead-th Username
-                        th.tableUser__thead-th Fullname
-                        th.tableUser__thead-th Role
-                    tbody.users__tableUser-tbody
-                        each user, i in usersAll
-                            tr.tableUser__tbody-tr
-                                td.tbody__tr-td(data-td="No")= i + 1
-                                td.tbody__tr-td(data-td="Username")= user.usarname
-                                td.tbody__tr-td(data-td="Fullname")= user.fullname
-                                td.tbody__tr-td(data-td="Role")= user.role
-            else 
-                div.main__adminUser-notUser
-                    h2.adminUser__notUser-title NO SE ENCONTRO NINGUN USUARIO 
-        nav.main__adminUser-NavPage
-            +navPagination(page,totalPage)
-           
-               
+            +tableContent(usersAll,dataHead,"NO HAY USUARIOS AGREGADOS AL SISTEMA")
+            +navPagination(page,totalPage)      
