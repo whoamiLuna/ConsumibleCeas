@@ -1,8 +1,8 @@
 
 
-mixin showFormAdd(formShowAdd,formShowInputs,classTarget)
-    article.formContainerShow
-        form.showForm(action=formShowAdd.action, method=formShowAdd.method, autocomplete="off", class=(classTarget ? classTarget : ""))
+mixin showFormAdd(formShowAdd,formShowInputs,classTarget,classClose)
+    article.formContainerShow( class=(classTarget ? classTarget : ""))
+        form.showForm(autocomplete="off", id= formShowAdd.idForm)
             h3.showForm__title= formShowAdd.title
             div.showForm__inputs
                 each input in formShowInputs 
@@ -12,13 +12,24 @@ mixin showFormAdd(formShowAdd,formShowInputs,classTarget)
                         input.showForm__containerInput-input(type=input.type,placeholder=input.placeholder,name=input.name,id=input.id)
                 if formShowAdd.selected.length > 0  
                     each select in formShowAdd.selected 
-                        div.showForm__containerInput
-                            label.showForm__containerInput-label(for=select.id)
-                                i.containerInput__label-icon(class=select.class__icon)
-                            select.showFormSelect(id=select.id, name=select.name required)
-                                option.showForm__containerInput-option(name=select.defaultOption, selected , disabled)=select.defaultOption
-                                if select.options.length > 0
-                                    each option in select.options
-                                        option.showForm__containerInput-option(value=option.value)= option.valueText
+                        if select.multiple
+                            
+                                div.showForm__containerInput
+                                    label.showForm__containerInput-label(for=select.id)
+                                        i.containerInput__label-icon(class=select.class__icon)
+                                    select.showFormSelect(id=select.id, name=`${select.name}[]` required, multiple, class="multiple")
+                                        option.showForm__containerInput-option(name=select.defaultOption, selected , disabled)=select.defaultOption
+                                        if select.options.length > 0
+                                            each option in select.options
+                                                option.showForm__containerInput-option(value=option.value)= option.valueText
+                        else
+                            div.showForm__containerInput
+                                label.showForm__containerInput-label(for=select.id)
+                                    i.containerInput__label-icon(class=select.class__icon)
+                                select.showFormSelect(id=select.id, name=select.name required)
+                                    option.showForm__containerInput-option(name=select.defaultOption, selected , disabled)=select.defaultOption
+                                    if select.options.length > 0
+                                        each option in select.options
+                                            option.showForm__containerInput-option(value=option.value)= option.valueText
             input.showForm__submit(type="submit", value=formShowAdd.valueSubmit)
-            span.showForm__crossClose ❌            
+            span.showForm__crossClose(class=classClose) ❌   

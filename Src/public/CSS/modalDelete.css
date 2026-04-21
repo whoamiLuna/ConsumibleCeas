@@ -1,0 +1,134 @@
+.modalContainer{
+    width:100%;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    background-color: #47474769;
+    backdrop-filter: blur(2px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: scale(0);
+    transition: transform ease .4s;
+}
+
+.modalActive{
+    transform: scale(1);
+    transition: transform ease-in .4s;
+}
+
+
+.modalDelete{
+     width: 35rem;
+     min-height: 35rem;
+     height: auto;
+     border-radius: .5rem;
+     background-color: white;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+
+.modalDelete__contentTitle{
+    width: 95%;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .5rem;
+}
+
+
+.modalDelete__contentTitle-title{
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-size: 1.4rem;
+}
+
+.modalDelete__contentTitle-icon{
+    color: rgb(180, 163, 86);
+    font-size: 1.3rem;
+}
+
+
+.modalDelete__contentData{
+    width: 95%;
+    height: auto;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: .7rem;
+}
+
+
+.modalDelete__contentData-data{
+    width: 100%;
+    height: auto;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .7rem;
+}
+
+.key{
+    font-weight: bold;
+}
+
+
+.modalDelete__contentConfirm{
+    display: flex;
+    width: 100%;
+    height: auto;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.modalDelete__contentConfirm-btn{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .8rem;
+}
+
+
+.contentConfirm__btn-choose{
+    border-radius: .6rem;
+    outline: none;
+    border: 1.8px solid black;
+    padding: .7rem;
+    width: 7.5rem;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    transition: background-color ease .35s, color ease .35s;
+    
+}
+
+.acept{
+    background-color: rgb(119, 175, 97);
+    
+}
+
+.acept:hover{
+    background-color: rgb(147, 206, 124);
+    color: white;
+    transition: background-color ease-out .35s, color ease-out .35s;
+    
+}
+
+.cancel{
+    background-color: rgb(153, 83, 83);
+}
+
+.cancel:hover{
+    background-color: rgb(230, 139, 139);
+    color: white;
+    transition: background-color ease-out .35s, color ease-out .35s;
+}

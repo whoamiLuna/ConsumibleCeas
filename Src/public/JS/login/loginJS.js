@@ -1,9 +1,15 @@
-import BtnMenuToogle from "../btnMenuToogle.js";
+import formSubmit from "../formSubmit.js";
+
 
 const d= document;
 
+const fetchOptionsLogin={
+    method:"POST",
+    url: "/",
+}
+
 
 d.addEventListener("DOMContentLoaded", e =>{
-    BtnMenuToogle(".btn__notification", "notifications__active",".notifications")
+    formSubmit({form:"#formLogin", fetchOptions: fetchOptionsLogin})
     console.log("login")
 })

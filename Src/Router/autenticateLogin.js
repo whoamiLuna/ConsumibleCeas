@@ -12,7 +12,7 @@ const RouterAuth= Router()
 
 RouterAuth.get("/roles",(req,res)=>{
 
-if(!req.isAuthenticated()) return res.redirect("/login")
+if(!req.isAuthenticated()) return res.redirect("/")
 
 const {role} = req.user
 
@@ -31,18 +31,31 @@ switch (role) {
 })
 
 
+//TODO LOGOUT SESSION MANUAL
+RouterAuth.get("/logOut",(req,res)=>{
+    req.logout((err) => {
+        if (err) return next(err);
+        req.session.destroy(() => {
+            res.redirect("/");
+        });
+    });
+
+})
+
+
+
 
 
 
 
 //?form login
 RouterAuth.get("/",(req,res,next)=>{
-    req.logOut(err=>{
-        if(err) return next(err)
-            
+    
+        if (req.isAuthenticated()) {
+        return res.redirect("/roles");}
+
         res.render("autenticate/login.pug",{
         description:"INICIAR SESION EN CONSUMIBLES CEAS",
-        style:"CSS/loginForm.css",
         Script: "JS/login/loginJs.js",
         titles:"LOGIN",
         navItems:[{
@@ -64,10 +77,13 @@ RouterAuth.get("/",(req,res,next)=>{
             id:"password",
             labelTitle:"Contraseña:"
         }],
-        action:"/login",
         titleForm:"INICIAR SESION", 
-        valueBtn:"Iniciar"
-    }) })
+        valueBtn:"Iniciar",
+        formId: "formLogin",
+        titleHeadForm: " ",
+        idEdit: " "
+    
+    })
     
 
 })
@@ -80,16 +96,43 @@ RouterAuth.get("/",(req,res,next)=>{
 
 
 
-//todo post passport and validate login
+
+//todo post passport and validate login users MYSQL 8
 
 RouterAuth.post("/",
     bodyValidateLogin,
-    validateExpressErrors("/login"),
-    passport.authenticate("local.login",{
-   successRedirect:"/login/roles",
-   failureRedirect:"/login", 
-   failureFlash:true 
-}))
+    validateExpressErrors("/"),
+    (req,res, next)=>{
+        passport.authenticate("local.login",(err,user, info)=>{
+                
+             if (err) return next(err);
+
+            if (!user) {
+                return res.status(400).json({
+                    ok:false,
+                    message: info.message,
+                    redirect:"/"
+                })
+
+            }
+
+            req.logIn(user, (err) => {
+                if (err) return next(err);
+
+                    return res.status(200).json({
+                        ok:true,
+                        message:`Iniciaste Sesion ${user.fullname}`,
+                        redirect:"/roles"
+                    })
+            }); 
+
+        })(req, res, next);
+
+
+
+        })
+            
+     
 
 
 
@@ -99,17 +142,40 @@ RouterAuth.post("/",
 
 
 
-//todo post passport and validate singup
+
+//todo post passport and validate singup add users 
 
  
 RouterAuth.post("/signUp",
     bodyValidateAddUsers,
     validateExpressErrors("/admin/users"),
-    passport.authenticate("local.signup",{
-    successRedirect:"/admin/users",
-    failureRedirect:"/admin/users",
-    failureFlash:true
-}))
+    (req, res,next)=>{
+        passport.authenticate("local.signup",(err, user, info)=>{
+            
+            if(err) return next(err)
+
+            if(!user){
+               return  res.status(400).json({
+                    ok:false,
+                    message:info.message,
+                    redirect:"/admin/users"
+                })
+            }else
+
+               return  res.status(200).json({
+                    ok:true,
+                    message:info.message,
+                    redirect: "/admin/users"
+                })
+            
+        
+        })(req,res,next)
+        
+        
+    }
+
+
+)
 
 
 

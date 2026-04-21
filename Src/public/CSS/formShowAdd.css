@@ -3,7 +3,7 @@
     transform: scale(0);
     width: 100%;
     height: 100%;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     background-color: transparent;
@@ -18,7 +18,7 @@
 .showForm{
     position: relative;
     width: 34rem;
-    height: 44rem;
+    height: 52rem;
     display: flex;
     flex-flow: column nowrap;
     background-color: var(--color_navObscure);
@@ -35,7 +35,7 @@
 }
 
 .showForm__inputs{
-    width: 100%;
+    width: 93%;
     display: flex;
     flex-flow: column nowrap;
     justify-content: center;
@@ -89,10 +89,19 @@ select.showFormSelect{
 
 
 select.showFormSelect > option:checked{
-    background-color: var(--color_navObscure); 
+    background-color: #c2bcbc; 
     color: whitesmoke;
    
 }
+
+
+/* select multiple */
+
+ /* select.multiple{
+    height: 5rem;
+}  */
+
+
 
 
 /* hovers and transiktions inputs select */

@@ -3,7 +3,7 @@ include ../partials/datalist.pug
 include ../partials/navPagination.pug
 include ../partials/formShowAdd.pug
 include ../partials/tableContent.pug
-
+include ../partials/notifications.pug
 
 block content
     if formShowAdd && formShowInputs 
@@ -12,10 +12,10 @@ block content
         article.main__adminUser-head
             h1.adminUser__title USUARIOS AGREGADOS
             div.adminUser__containerList
-                +dataListSearch(dataListSearch,usersFullSearch)
+                +dataListSearch(dataListSearch,optionsDataSearch)
                 a.adminUser__containerList-adduser(href="/admin/users/add")
                     i.containerList__adduser-icon(class="fas fa-user-plus")
                     = "Agregar Usuario"
         article.main__adminUser-users
-            +tableContent(usersAll,dataHead,"NO HAY USUARIOS AGREGADOS AL SISTEMA")
+            +tableContent(usersAll,dataHead,actions,idField,"NO HAY USUARIOS AGREGADOS AL SISTEMA")
             +navPagination(page,totalPage)      

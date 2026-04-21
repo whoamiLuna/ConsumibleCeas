@@ -17,16 +17,14 @@ const [searchUser]= await pool.query("select username, fullname from users where
 
 
 if(searchUser.length > 0){
-     req.flash("errorMessage", `El usuario ${username} o el nombre de usuario ${fullname} ya existen, intente con un nuevo usuario`)
-     return done(null,false)
+     return done(null,false,{message:`El usuario ${username} o el nombre de usuario ${fullname} ya existen, intente con un nuevo usuario` })
 }
 
 const encrypt = await encryptPassword(password)
 
 
 if(!encrypt){
-     req.flash("errorMessage","Hubo un error en la encriptacion de la contraseña, intente de nuevo")
-     return done(null,false)
+     return done(null,false,{message: "Hubo un error en la encriptacion de la contraseña, intente de nuevo"})
 }
 
 
@@ -37,25 +35,27 @@ if(!encrypt){
           role
           }
 
-     const [userAdd] = await pool.query("insert into users set ?", [newUser])
-       
-
-     if(userAdd.affectedRows > 0){
           
-              const userSession= {
-              ...newUser,
-              id_user: userAdd.insertId
-             }
-             req.flash("successMessage",`El usuario ${username} se ha creado satisfactoriamente`)
-             return done(null, false) 
-         }else{
-               req.flash("errorMessage","Error al crear al usuario en la base de datos")
-               return done(null,false) 
-         }
-         
+          try {
+               
+               const [userAdd] = await pool.query("insert into users set ?", [newUser])
 
-     
-     
+               if(userAdd.affectedRows > 0){
+                    
+                        const userSession= {
+                        ...newUser,
+                        id_user: userAdd.insertId
+                       }
+                       return done(null, {created:true},{message: `El usuario ${username} se ha creado satisfactoriamente`})
+                   }else{
+                         return done(null,false,{message: "Error al crear al usuario en la base de datos"}) 
+                   }
+
+          } catch (err) {
+              console.log(err)
+               
+          }
+         
 
 
 }))
@@ -108,15 +108,16 @@ if(searchLoginUser.length > 0){
      const passwordDecrypt= await comparePassword(password,userFind.password)
 
      if(passwordDecrypt === true){
-          return done(null,userFind)
+          
+               return done(null,userFind)
      }else{
-          req.flash("errorMessage", "Contraseña incorrecta, vuelve a intentarlo")
-          return done(null,false)
+          
+          return done(null,false,{message: "Contraseña incorrecta, vuelve a intentarlo"})
+               
      }
           
 }else{
-      req.flash("errorMessage", `El usuario ${username} no existe, intente de nuevo`)
-      return done(null, false)
+      return done(null, false,{message: `El usuario ${username} no existe, intente de nuevo`})
 }
 
 }))  

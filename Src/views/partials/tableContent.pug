@@ -1,24 +1,30 @@
 
 
 
-mixin tableContent(dataContent, dataHead, textNotFound)
+mixin tableContent(dataContent, dataHead, actions, idField, textNotFound)
     if dataContent && dataContent.length > 0 && dataHead && dataHead.length > 0
-        table.tableContent
-            thead.tableContent__head
-                tr.tableContent__head-head
-                    th.tableContent__head-th No.
+        article.tableContent
+            div.tableContent__head
+                div.tableContent__head-head
+                    div.tableContent__head-th No.                
                     each head in dataHead
-                        th.tableContent__head-th=  head.valueHeadText 
-            tbody.tableContent__body 
+                        div.tableContent__head-th= head.valueHeadText                   
+                    if actions && actions.length  > 0
+                        div.tableContent__head-th Acciones
+            div.tableContent__body
                 each row, i in dataContent
-                        tr.tableContent__row
-                            td.tableContent__row-row(data-head="No")
-                                 span.tableContent__row-span=i + 1
-                            each head in dataHead
-                                - let cellValue= row[head.key]
-                                - let cellClass= head.cellClass? head.cellClass(cellValue) : ""
-                                td.tableContent__row-row(data-head=head.valueHeadText )
-                                    span.tableContent__row-span(class=cellClass)= cellValue
+                    div.tableContent__row
+                        div.tableContent__row-row(data-head="No")
+                            span.tableContent__row-span= i + 1
+                        each head in dataHead
+                            - const value = row[head.key]
+                            - const cellClass = head.cellClass ? head.cellClass(value) : ""
+                            div.tableContent__row-row(data-head=head.valueHeadText)
+                                span.tableContent__row-span(class=cellClass)= value
+                        if actions && actions.length > 0
+                            div.tableContent__row-row(data-head="Acciones")
+                                each action in actions
+                                    a.tableContent__action(href=`${action.href}${row[idField]}`, class= action.type, data-id=row[idField], title=action.type)
+                                        i(class=action.icon)
     else 
         h3.tableContent__noFound= textNotFound
-    

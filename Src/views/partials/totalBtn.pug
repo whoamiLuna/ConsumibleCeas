@@ -1,0 +1,15 @@
+
+mixin sectionTotals(totals, title)
+    article.section__totals
+        h3.section__totals-title= title
+        div.section__totals-div
+            each btn in totals
+                div.totals__div-content
+                    if btn.action
+                        a.div__content-titleLink(href=btn.action, class=(btn.classActive ? btn.classActive : ""))= btn.value
+                            i.content__titleLink-icon(class=btn.classIcon)
+                    else
+                        span.div__content-title= btn.title
+                        span.div__content-total= btn.value
+                    
+

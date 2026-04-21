@@ -1,19 +1,11 @@
 
-mixin notifications(errors,success)
-    article.notifications
-        div.notifications__content
-            i.content__titles-icon(class="fas fa-bell")
-            h3.conten__titles-title NOTIFICACIONES 
-        div.notifications__msg
-            if errors && errors.length > 0
-                each err in errors
-                     div.notifications__msg-message.error
-                        i.msg__message-icon(class="fas fa-exclamation")
-                        span.msg__message-content= err
-            else if success && success.length 
-                each valid in success 
-                    div.notifications__msg-message.success
-                        i.msg__message-icon(class="fas fa-exclamation")
-                        span.msg__message-content= valid
-                  
+mixin notifications()
+    section.notifications__panel
+        span.notifications__panel-icon(title="Cerrar")
+             i.panel__icon(class="fas fa-window-close")
+        article.notifications
+            div.notifications__content
+                i.content__titles-icon(class="fas fa-bell")
+                h3.conten__titles-title NOTIFICACIONES
+            div.notifications__msg
 

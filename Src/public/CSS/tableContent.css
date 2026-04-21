@@ -1,12 +1,15 @@
 .tableContent{
-    width: 80%;
+    width: 98%;
     height: auto;
     background:#f0eeee;
     border-radius: 1rem;
     box-shadow: 2px 3px 7px var(--color__boxshadow);
     padding: 0;
     border: none; 
-    border-spacing: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-flow: column nowrap;
 }   
 
 /* *header table */
@@ -15,46 +18,81 @@
      width: 100%;
      height: 10rem;
      background-color: var(--color_navObscure);
-     border-radius: 1rem;
+     border-radius: 1rem 1rem 0 0;
      text-align: center;
      box-shadow: 0px 1px 3px var(--color__boxshadow);
-
 }
 
 
 .tableContent__head-head{
+    width: 100%;
+    height: 100%;
     color: white;
     font-size: 1.4rem;
     text-align: center;
     font-weight: bold;
     letter-spacing: 1.8px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
 }
 
-.tableContent__head-head .tableContent__head-th:nth-child(1){
-    border-radius: 1rem  0px 0px 0px;
+.tableContent__head-th{
+    width: 20%;
+    height: 100%;
+    line-height: 10rem;
 }
 
-.tableContent__head-head .tableContent__head-th:nth-last-child(1){  
-    border-radius: 0rem  1rem 0rem 0rem;
+.tableContent__head-head .tableContent__head-th:nth-child(1), .tableContent__row .tableContent__row-row:nth-child(1){
+    width: 8rem;
 }
+
+.tableContent__head-head .tableContent__head-th:nth-last-child(1), .tableContent__row .tableContent__row-row:nth-last-child(1){
+width: 17rem;
+}
+
 /* *body */
+
+.tableContent__body{
+    width: 100%;
+    height: auto;
+}
 
 .tableContent__row{
     width: 100%;  
-    height: 6rem;
+    min-height: 6.5rem;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid rgb(158, 154, 154);
 }
 
+
+
+
 .tableContent__row-row{
-    border-bottom: 1.3px solid #cecccc; 
+    width: 20%;
     text-align: center;
     font-size: 1.2rem;
 }
 
+.tableContent__action{
+    font-size: 1.4rem;
+    text-decoration: none;
+    margin: .4rem;
+    padding: .5rem;
+    border: 1px solid red;
+}
 
 
+.delete{
+    color:rgb(223, 91, 91)
+}
 
-
-
+.edit{
+    color: rgb(129, 126, 74);
+}
 
 
 
@@ -77,15 +115,74 @@
     border-radius: 1rem;
 }
 
+/** equipos */
+.Bueno{
+    color:aquamarine;
+    background-color: rgb(47, 124, 47);
+    padding: .5rem;
+    border-radius: .5rem;
+}
 
+
+.Malo{
+    color: pink;
+    background-color: rgb(136, 55, 55);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+
+.Impresora{
+    color: white;
+    background-color: rgb(155, 151, 113);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+.Multifuncional{
+    color: white;
+    background-color: #e6ba5d;
+    padding: .5rem;
+    border-radius: .5rem;    
+} 
+
+
+.Cpu{
+    Color:white;
+    background-color: rgb(70, 69, 69);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+
+.Monitor{
+    color: white;
+    background-color: rgb(59, 91, 238);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+.All-in-one{
+    color: white;
+    background-color: rgb(201, 65, 87);
+    padding: .5rem;
+    border-radius: .5rem;
+}
 /*? responsive */
 
 
-@media screen and (max-width: 1074px) {
+@media screen and (max-width: 1200px) {
 
-    .tableContent__row-row,.tableContent__row,.tableContent__body,.tableContent__head,.tableContent__head-head, .tableContent__head-th{
+    .tableContent__row-row,.tableContent__row,.tableContent__body{
         display: block;
     }
+
+    .tableContent__head{
+        display: none;
+        visibility: hidden;
+    }
+
+   
 
     .tableContent__row{
         height: auto;
@@ -97,21 +194,20 @@
         display: flex;
         justify-content:space-between;
         align-items: center;
+        border-bottom: 1px solid #d1cccc;
     }
 
     .tableContent__row .tableContent__row-row:nth-child(1){
         background-color: #b1b0b0;
+        width: 100%;
     }
 
     
 
     .tableContent{
-        width: 30rem;
+        width: 90%;
     }
 
-    .tableContent__head{
-        display: none;
-    }
 
     .tableContent__row-row::before{
         content: attr(data-head) ":";

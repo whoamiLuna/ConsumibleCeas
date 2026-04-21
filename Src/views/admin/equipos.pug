@@ -1,0 +1,29 @@
+extends ../layout.pug
+include ../partials/formShowAdd.pug
+include ../partials/containerDataScroll.pug
+include ../partials/navPagination.pug
+include ../partials/tableContent.pug
+include ../partials/totalBtn.pug
+include ../partials/datalist.pug
+include ../partials/modalDelete.pug
+
+block  content
+    if formShowAdd && formShowInputs
+        +showFormAdd(formShowAdd,formShowInputs,classTarget,classClose)
+        +showFormAdd(formShowAdd2,formShowInputs2,classTarget2,classClose2)
+        +showFormAdd(formShowAdd3,formShowInputs3,classTarget3,classClose3)
+        +showFormAdd(formShowAdd4,formShowInputs4,classTarget4,classClose4)
+    +modalDelete()
+    section.main__equipos 
+        h1.equipos__equipos-title EQUIPOS INFORMATICOS
+        article.main__equipos-equipo
+            div.main__equipos-totalContent
+                +dataListSearch(dataListSearch4,optionsDataSearch4)
+                +sectionTotals(totals, "TOTALES DE EQUIPOS ACTIVOS")
+            +tableContent(equiposAll,dataHead,actions,idField,"NO HAY EQUIPOS AGREADOS")
+            +navPagination(page,totalPage)
+        article.main__equipos-marcas
+            h2.equipos__marcas-title  MARCAS, MODELOS Y TIPOS
+            +containerData(containerData,dataListSearch,optionsDataSearch)
+            +containerData(containerData2,dataListSearch2,optionsDataSearch2)
+            +containerData(containerData3,dataListSearch3,optionsDataSearch3)

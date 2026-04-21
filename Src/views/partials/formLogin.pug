@@ -1,12 +1,29 @@
 
 
-mixin formAutentication(inputs, action, titleForm,valueBtn)
-    article.form__Content
-        form.formAutenticate(action=action, method="post", autocomplete="off")
-            h2.formAutenticate__title=titleForm
-            each input in inputs
-                div.formAutenticate__container
-                    label.formAutenticate__container-label(for= input.id)= input.labelTitle
-                    input.formAutenticate__container-input(type=input.type, placeholder=input.placeholder, name= input.name, id=input.id)
-
-            input.formAutenticate__submit(type="submit", value=valueBtn)    
+mixin formAutentication(inputs, titleForm,valueBtn,formId,titleHeadForm,idEdit)
+    section.main__formLogin
+        article.form__Content
+            if titleHeadForm && titleHeadForm.length > 0 
+                h1.form__Content-Title= titleHeadForm
+                form.formAutenticate(autocomplete="off", id= formId,data-id=(idEdit ? idEdit : ""))
+                    h2.formAutenticate__title=titleForm
+                    each input in inputs
+                        if input.type != "select"
+                            div.formAutenticate__container
+                                label.formAutenticate__container-label(for= input.id)= input.labelTitle
+                                input.formAutenticate__container-input(type=input.type, placeholder=input.placeholder, name= input.name, id=input.id, value= (input.value ? input.value : ""), required)
+                        if input.type === "select" && !input.multiple
+                            div.formAutenticate__container
+                                label.formAutenticate__container-label(for= input.id)= input.labelTitle
+                                select.formAutenticate__container-input(name= input.name, id=input.id, required)
+                                    option(value="", selected, disabled)=(input.value ? input.value : "Seleccione un Valor")  
+                                        each opt in input.options
+                                            option(value=opt.value)=opt.text
+                        if input.multiple
+                            div.formAutenticate__container
+                                    label.formAutenticate__container-label(for= input.id)= input.labelTitle
+                                    select.formAutenticate__container-input( id=input.id, name=`${input.name}[]` required, multiple)
+                                        option(value=(input.value ? input.value : "Seleccione un Valor"), selected, disabled)=(input.value ? input.value : "Seleccione un Valor")  
+                                            each opt in input.options
+                                                option(value=opt.value)=opt.text                            
+                    input.formAutenticate__submit(type="submit", value=valueBtn)   

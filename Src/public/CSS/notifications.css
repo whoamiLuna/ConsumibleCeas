@@ -1,8 +1,43 @@
-.notifications{
+.notifications__panel{
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.74);
+    backdrop-filter: blur(10px);
+    z-index: 300;
     position: fixed;
-    right: 0;
-    transform: translateX(40rem);
     top: 0;
+    display: flex;
+    padding: 0;
+    z-index: 200;
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transform: translateX(100%);
+    transition: transform ease .42s;
+}
+
+
+
+.notifications__panel-icon{
+    translate: 3rem -40rem;
+     color: rgb(223, 110, 110);
+     font-size: 2rem;
+     background-color: white;
+     padding: .3rem .4rem;
+     width: auto;
+     height: auto;
+     cursor: pointer;
+     border-radius: 5px;
+}
+
+.notifications__panel-icon > i {
+     width: 100%;
+     height: 100%;
+     margin: 0 ;
+}
+
+.notifications{
     width: 40rem;
     display: flex;
     transition: transform ease-in .3s;
@@ -11,7 +46,7 @@
     flex-flow: column nowrap;
     justify-content: space-around;
     align-items: center;
-    z-index: 100;
+    box-shadow:  -6px -6px 17px 4px  #0000005b;
 }
 
 
@@ -67,7 +102,7 @@
 /* * class active */
 .notifications__active{
     transform: translateX(0);
-    transition: transform ease .4s;
+    transition: transform ease-in .4s;
 }
 
 
@@ -78,12 +113,8 @@
 @media screen and (max-width: 600px) {
     .notifications{
         width: 30rem;
-        transform: translateX(30rem);
-        transition: transform ease-in .3s;
+        
     }
 
-    .notifications__active{
-        transform: translateX(0);
-        transition: transform ease .3s;
-    }
+    
 }

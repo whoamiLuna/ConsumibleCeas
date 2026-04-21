@@ -10,7 +10,7 @@ export default function isAuthLogin(...role){
                 return next()
             }else{
                 console.log(`No autorizado user: ${req.user.username}`)
-                return res.redirect("/login/Restrict")
+                return res.redirect("/Restrict")
             }
         }else {
         return res.redirect("/")

@@ -1,7 +1,7 @@
 
 const keysDb= {
 host:"localhost",
-user:"ceasInfo",
+user:"ceasinfo",
 password:"ceasinfo.admin",
 database:"consumiblesceas",
 decimalNumbers:true,

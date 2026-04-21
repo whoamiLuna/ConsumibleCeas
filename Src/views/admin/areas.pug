@@ -1,11 +1,16 @@
 extends ..\layout.pug 
-
+include ..\partials\containerDataScroll.pug
+include ..\partials\formShowAdd.pug 
+include ..\partials\notifications.pug
 
 
 block content
-
+    if formShowAdd && formShowInputs 
+        +showFormAdd(formShowAdd,formShowInputs,classTarget1,classClose1)        
+        +showFormAdd(formShowAdd1,formShowInputs2,classTarget2,classClose2)        
     section.main__areas
         article.main__areas-titleContainer
             h1.areas__titleContainer-title AREAS Y DIRECCIONES
-        article.main__area-areas 
-        
+        article.main__areas-areas 
+            +containerData(containerData,dataListSearch1,optionsDataSearch1)
+            +containerData(containerData2,dataListSearch2,optionsDataSearch2)

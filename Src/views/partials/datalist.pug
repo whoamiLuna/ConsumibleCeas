@@ -5,5 +5,8 @@ mixin dataListSearch(datalistSearch,optionsData)
         input.formDataList__search(type="text", name=datalistSearch.name,list=datalistSearch.id placeholder=datalistSearch.placeholderSearch)
         input.formDataList__submit(type="submit", value=datalistSearch.submit)
         datalist.formDataList__datalist(id=datalistSearch.id)
-            each value in optionsData
-                 option.formDataList__datalist-option= value.fullname       
+            if optionsData.length > 0  
+                each value in optionsData
+                     option.formDataList__datalist-option(value=value)= value
+            else 
+                option.formDataList__datalist-option "Sin Registros"

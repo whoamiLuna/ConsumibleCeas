@@ -1,16 +1,35 @@
 
-include .\formShowAdd.pug
+include .\datalist.pug
 
 mixin containerData(containerData,dataListSearch,optionsData)
-    nav.containerHead
+    div.containerHead
         if containerData.optionsBtn.length > 0
-            div.contaonerHead__options
-                each btn in containerData.optionsBtn 
-                    a.containerHead__options-btn(href=btn.href, title= btnTitle)= btn.contentText 
-        if dataListSearch && optionsData.length > 0
-            +showFormAdd(dataListSearch,optionsData)
-    div.containerContent
+            nav.containerHead__options
+                div.containerHead__options-container
+                    h3.containerHead__options-title= containerData.title
+                    div.containerHead__options-navBtns
+                        each btn in containerData.optionsBtn 
+                            a.containerHead__options-btn(href=btn.href, title= btn.Title, class=(btn.classActiveForm ? btn.classActiveForm : " "))
+                                i.options__btn-icon(class=btn.classIcon)    
+                                span.options__btn-span= btn.contentText
+                if dataListSearch && optionsData
+                    +dataListSearch(dataListSearch,optionsData)
         if containerData.itemsData.length > 0
-            each item in containerData
-                div.containerContent__item
-                    p.container__item-text= item.text
+            div.containerContent
+                if containerData.headTitles && containerData.headTitles.length > 0
+                    div.containerContent__titles
+                        each title in containerData.headTitles
+                            h4.containerContent__titles-title= title
+                each item in containerData.itemsData
+                    div.containerContent__item
+                        each value,key  in item
+                           if key !== containerData.idField
+                                div.item__containerData
+                                    span.container__item-spanValue(data-title=`${key}: `)= value
+                        div.item__containerData-btns
+                            a.container__item-editContainer(href=`${containerData.hrefRute}/${item[containerData.idField]}`,title="EDITAR") 
+                                    i.item__editContainer(class="fas fa-edit")
+                            a.container__item-deleteContainer(data-url=`${containerData.hrefRuteDelete}/${item[containerData.idField]}`,title="ELIMINAR") 
+                                    i.item__editContainer(class="fas fa-trash") 
+        else
+            p.containerContent__empty NO HAY DATOS INGRESADOS

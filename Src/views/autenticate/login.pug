@@ -1,8 +1,6 @@
 extends ../layout.pug
 include ../partials/formLogin.pug
+include ../partials/notifications.pug
 
 block content
-  section.main__formLogin
-
-
-    +formAutentication(inputs, action, titleForm, valuebtn)
+  +formAutentication(inputs, titleForm, valuebtn, formId,titleHeadForm,idEdit) 

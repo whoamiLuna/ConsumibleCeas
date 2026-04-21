@@ -1,0 +1,19 @@
+extends ../layout.pug 
+include ../partials/formShowAdd.pug
+include ../partials/containerDataScroll.pug
+include ../partials/modalDelete.pug
+
+block content
+    if formShowAdd && formShowInputs
+        +showFormAdd(formShowAdd,formShowInputs,classTarget,classClose)
+        +showFormAdd(formShowAdd2,formShowInputs2,classTarget2,classClose2)
+        +showFormAdd(formShowAdd3,formShowInputs3,classTarget3,classClose3)
+        +modalDelete()
+    section.main__consumibles
+        h1.main__consumibles-title CONSUMIBLES
+        +containerData(containerData3,dataListSearch3, optionsDataSearch3)
+        article.main__consumibles-container 
+            h2.consumibles__container-title TIPO DE CONSUMIBLE
+            +containerData(containerData,dataListSearch, optionsDataSearch)
+            h2.consumibles__container-title MARCA DE CONSUMIBLE
+            +containerData(containerData2,dataListSearch2,optionsDataSearch2)

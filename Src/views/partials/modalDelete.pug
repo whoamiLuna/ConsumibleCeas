@@ -1,0 +1,15 @@
+
+
+mixin modalDelete()
+    div.modalContainer
+        article.modalDelete
+            div.modalDelete__contentTitle
+                i.modalDelete__contentTitle-icon(class="fas fa-exclamation-triangle")
+                h3.modalDelete__contentTitle-title Eliminaras permanentemente lo siguiente: 
+            div.modalDelete__contentData
+            div.modalDelete__contentConfirm
+                h3.modalDelete__contentConfirm ¿Desea continuar con la operacion?
+                div.modalDelete__contentConfirm-btn
+                    button.contentConfirm__btn-choose.acept Confirmar
+                    button.contentConfirm__btn-choose.cancel Cancelar
+                    

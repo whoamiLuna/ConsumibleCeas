@@ -1,0 +1,61 @@
+.main__equipos{
+    width: 100%;
+    min-height: 100vh;
+    height: auto;  
+}
+
+
+/** table content and totals  */
+
+
+.main__equipos-equipo{ 
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+}
+
+
+.equipos__equipos-title{
+font-size: 2.8rem;
+text-align: center;
+margin-bottom: 1rem;
+
+}
+
+
+
+.main__equipos-totalContent{
+    width: 100%;
+    height: auto;
+    min-height: 11rem;
+    flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+
+
+
+
+
+/* * marcas and others */
+.main__equipos-marcas{
+    width: 100%;
+    height: auto;
+    min-height: 22dn0vh;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content:space-evenly;
+    gap: 5rem;
+}
+
+.equipos__marcas-title{
+    font-size: 2.6rem;
+}
