@@ -24,7 +24,8 @@ mixin tableContent(dataContent, dataHead, actions, idField, textNotFound)
                         if actions && actions.length > 0
                             div.tableContent__row-row(data-head="Acciones")
                                 each action in actions
-                                    a.tableContent__action(href=`${action.href}${row[idField]}`, class= action.type, data-id=row[idField], title=action.type)
-                                        i(class=action.icon)
+                                    if !action.visible || action.visible(row)
+                                        a.tableContent__action(href=`${action.href}${row[idField]}`, class= action.type, data-id=row[idField], title=action.type, data-url=`${action.href}${row[idField]}`)
+                                            i(class=action.icon)
     else 
         h3.tableContent__noFound= textNotFound

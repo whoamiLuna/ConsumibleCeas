@@ -1,0 +1,28 @@
+
+
+
+mixin formFolio(title, equipos,entradas)
+    if entradas=== true || equipos=== true
+        article.formFolio
+            h3.formFolio__title= title
+            form.formFolio__form(action="", id="formFolio")
+                div.formFolio__form-statusContainer
+                    label.form__statusContainer-label(for="status") Estatus del folio
+                    select.form__statusContainer-select(name=(entradas === true ? "status_entrada" : "status_salida"))
+                        option.statusContainer__select-option(disabled, selected, value="") Seleccione un Estatus
+                        option.statusContainer__select-option(value="VERIFICADO") Verificado
+                        option.statusContainer__select-option(value="PENDIENTE") Pendiente
+                div.formFolio__addConsumibles
+                    a.formFolio__addConsumible-btnAdd(href="#", title="Agregar Consumible")
+                        i.addConsumible__btnAdd-icon(class="fas fa-tint")
+                        span.addConsumible__btn-span Agregar Consumible   
+                    div.formFolio__addConsumibles-consumibles
+                if equipos=== true
+                    div.formFolio__addEquipos
+                        a.formFolio__addEquipos-btnAdd(href="#", title= "Agregar Equipo")
+                            i.addEquipos__btnAdd-icon(class="fas fa-desktop")  
+                            span.addEquipos__btnAdd-span Agregar Equipo
+                        div.formFolio__addEquipos-equipos
+                div.formFolio__actions
+                    button.formFolio__actions-cancel Cancelar 
+                    input.formFolio__actions-send(type="submit", value="Agregar")

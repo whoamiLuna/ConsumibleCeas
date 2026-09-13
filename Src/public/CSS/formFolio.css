@@ -1,0 +1,295 @@
+
+.formFolio{
+    width: 100%;
+    min-height: 100vh;
+    height: auto;
+    position: fixed;
+    display: flex;
+    background-color: #00000071;
+    backdrop-filter: blur(3px);
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    transform: translateY(100%);
+    transition: transform .4s ease;
+}
+
+
+
+
+/* *active modal folio */
+
+.formFolio__active{
+    transform: translateY(0);
+    transition:  transform ease .44s;
+
+}
+
+
+.formFolio__title{
+    font-size: 2.5rem;
+    color: white;
+}
+
+
+
+
+
+
+/* * FORM */
+.formFolio__form{
+    width: 70rem;
+    height: 70rem;
+    background-color: white;
+    border-radius: 2rem;
+    box-shadow: 0px 0px 6px #00000059;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: space-evenly;
+    }
+
+
+    /* * status folio container */
+
+.formFolio__form-statusContainer{
+    width: 95%;
+    height: 10rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.17rem;
+}
+
+.form__statusContainer-label{
+    font-weight: bold;
+}
+
+.form__statusContainer-select{
+    width: 20rem;
+    outline: none;
+    border: none;
+    height: 2.4rem;
+    background-color: #e7e3e3;
+    border-radius: .5rem;
+    text-align: center;
+    color: #424141;
+}   
+
+
+
+/* * consumibles container */
+
+
+.formFolio__addConsumibles,.formFolio__addEquipos{
+    width: 95%;
+    height: 20rem;
+    display: flex;
+    flex-flow: column nowrap;    
+    gap: 1rem;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: #ebe6e6;
+    overflow-y: auto;
+    padding: .9rem;
+    border-radius: .6rem;
+    position: relative;
+}
+
+
+.formFolio__addConsumible-btnAdd,.formFolio__addEquipos-btnAdd{
+    width: 15rem;
+    background-color: #bdbaba ;
+    padding: .7rem;
+    text-align: center;
+    font-size: 1.15rem;
+    text-decoration: none;
+    color: rgb(56, 56, 56);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .4rem;
+    font-weight: bold;
+    border-radius: .5rem;
+    box-shadow: 0 0 3px #00000050;
+    transition: background-color ease .3s, color ease .3s;
+    position:fixed;
+}
+
+
+.formFolio__addConsumible-btnAdd:hover, .formFolio__addEquipos-btnAdd:hover{
+    background-color: #424141;
+    color: white;
+    transition: background-color ease-out .3s, color ease-out .3s;
+}
+
+
+
+
+.formFolio__addConsumibles-consumibles,.formFolio__addEquipos-equipos{
+    width: 100%;
+    min-height: 10rem;
+    height: auto;
+    margin-top: 4rem;
+}
+
+
+
+
+
+/* * select and inputs consumibles and equipos */
+
+
+.formFolio__addConsumibles-inputContainer{
+    display: flex;
+    width: 100%;
+    height: 4.5rem;
+    border: 1px solid red;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+
+}
+
+.addConsumibles__inputContainer-container{
+    display: flex;
+    width: auto;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    gap: .5rem;
+}
+
+
+
+.inputContainer__container-select{
+     width: 20em;
+     border: none;
+     outline: none;
+     height: 2rem;
+     color: #424141;
+     margin: 0;
+     text-align: center;
+     border-radius: .5rem;
+     box-shadow: .8px .8px 4px #00000050;
+    }
+    
+    
+    .inputContainer__container-cantidad{
+        width: 11rem;
+        border: none;
+        outline: none;
+        height: 2rem;
+        text-align: center;
+        border-radius: .5rem;
+        box-shadow: .8px .8px 4px #00000050;
+        
+    }
+    .inputContainer__container-cantidad::placeholder{
+        color: #424141;
+    }
+    
+    .addConsumibles__inputContainer-delete{
+        width: 2rem;
+        height: 2rem;
+        background-color: rgb(218, 130, 130);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: .8px .8px 4px #00000050;
+        font-weight: bold;
+        color: white;
+}
+
+
+
+/** EQUIPOS */
+
+.addEquipos__inputContainerEquipo-container{
+    width: 70%;
+}
+
+
+
+/* * actions  */
+.formFolio__actions{
+    width: 100%;
+    min-height: 8rem;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+}
+
+.formFolio__actions-cancel, .formFolio__actions-send{
+    width: 8rem;
+    border: 1.4px solid blacK;
+    outline: none;
+    padding: .55rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    border-radius: .5rem;
+    box-shadow: .8px .8px 4px #00000050;
+}
+
+
+.formFolio__actions-cancel{
+    background-color: rgb(185, 72, 72);
+    transition: background-color ease .4s;
+}
+
+.formFolio__actions-send{
+    background-color: rgb(40, 128, 40);
+    transition: background-color ease .4s;
+}
+
+.formFolio__actions-cancel:hover{
+    background-color: #e48080fd;
+    transition: bakcground-color ease-in-out .35s;
+}
+
+.formFolio__actions-send:hover{
+    background-color: rgb(83, 201, 83);
+    transition: bakcground-color ease-in-out .35s;
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+/* * media querys  */
+
+
+
+@media screen and (max-width: 830px) {
+    .formFolio__form{
+        width: 30rem;
+    }
+
+
+    .formFolio__form-statusContainer{
+        flex-flow: column nowrap;
+
+    }
+
+    .inputContainer__container-select{
+        width: 15rem;
+    }
+
+    .inputContainer__container-cantidad{
+        width: 6rem;
+    }
+}

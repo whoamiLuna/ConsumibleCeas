@@ -1,0 +1,21 @@
+extends ../layout.pug 
+include ../partials/tableContent.pug
+include ../partials/datalist.pug
+include ../partials/navPagination.pug
+include ../partials/totalBtn.pug
+include ../partials/formFolio.pug
+include ../partials/modalDelete.pug
+
+
+block content
+    +formFolio("AGREGAR SALIDA",equipos,entradas)
+    +modalDelete()
+    section.main__salida
+        h1.main__salida-title SALIDAS CONSUMIBLES
+        div.main__salidaTitleContent
+            +dataListSearch(dataListSearch, optionsDataSearch)
+            +dataListSearch(dataListSearch2, optionsDataSearch2)
+            +dataListSearch(dataListSearch3, optionsDataSearch3)
+        +sectionTotals(totals, "Folios")
+        +tableContent(salidasAll, dataHead,actions,idField, "NO HAY SALIDAS REGISTRADAS" )
+        +navPagination(page, totalPage)

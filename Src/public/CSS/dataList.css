@@ -1,0 +1,45 @@
+
+.formDataList{
+    width: 40rem;
+    padding: 2.4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.6rem;
+}
+
+
+.formDataList__search{
+    width:  20rem;
+    border: 2px solid black;
+    outline: none;
+    padding: .5rem; 
+    font-size: 1.1rem;
+    border-radius: 10px;
+    transition: ease-in-out background-color .4s,  ease-in color .3s, ease padding .3s;
+}
+
+.formDataList__submit{
+    outline: none;
+    border: none;
+    padding: .7rem;
+    background-color: var(--color_nav);
+    color: white;
+    font-size: 1.1rem;
+    width: 6rem;
+    border-radius: 10px;
+    cursor: pointer;
+    
+}
+
+
+.formDataList__search:focus{
+    background-color: var(--color_nav);
+    color: white;
+    padding: .7rem;
+    transition: ease-in background-color .4s, ease color .4s,ease-out padding .3s;
+}
+
+.formDataList__search:focus::placeholder{
+    color: white;
+}

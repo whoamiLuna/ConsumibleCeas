@@ -4,10 +4,12 @@ include ../partials/navPagination.pug
 include ../partials/formShowAdd.pug
 include ../partials/tableContent.pug
 include ../partials/notifications.pug
+include ../partials/modalDelete.pug
 
 block content
     if formShowAdd && formShowInputs 
         +showFormAdd(formShowAdd,formShowInputs)
+    +modalDelete()
     section.main__adminUser
         article.main__adminUser-head
             h1.adminUser__title USUARIOS AGREGADOS
@@ -18,4 +20,4 @@ block content
                     = "Agregar Usuario"
         article.main__adminUser-users
             +tableContent(usersAll,dataHead,actions,idField,"NO HAY USUARIOS AGREGADOS AL SISTEMA")
-            +navPagination(page,totalPage)      
+            +navPagination(page,totalPage)          

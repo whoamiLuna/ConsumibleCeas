@@ -14,18 +14,20 @@ async function modalShowDelete({ btnFetch}){
     const $fragmentValuesDelete= document.createDocumentFragment()
     const $deleteBtnAll= document.querySelectorAll(btnFetch)
 
+    
+    $deleteBtnAll.forEach(btn => {
+        
+        
+        btn.addEventListener("click", async e=>{
+            
+            e.preventDefault()
+            console.log(e.currentTarget)
+            
+            const urlBtn= e.currentTarget.dataset.url
 
-        $deleteBtnAll.forEach(btn => {
+            const request= await fetch(`${urlBtn}`)
 
             
-            btn.addEventListener("click", async e=>{
-                
-                e.preventDefault()
-                console.log(e.currentTarget)
-
-                const urlBtn= e.currentTarget.dataset.url
-                const request= await fetch(`${urlBtn}`)
-                
                 if (request.ok){    
                     const response= await request.json()
                     
@@ -46,11 +48,7 @@ async function modalShowDelete({ btnFetch}){
                         $modalContentData.appendChild($fragmentValuesDelete) 
                     });
                     
-                    
-                    console.log(response.ok)
-                    console.log(response.dataTotals)
-                    
-                    
+                
             
                 }else{
                     

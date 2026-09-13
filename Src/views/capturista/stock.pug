@@ -1,0 +1,16 @@
+extends ../layout.pug 
+include ../partials/tableContent.pug
+include ../partials/datalist.pug
+include ../partials/navPagination.pug
+include ../partials/totalBtn.pug
+include ../partials/totalBtn.pug
+
+block content
+    section.main__stock
+        h1.main__stock-title STOCK CONSUMIBLES
+        div.main__stockSearchContainer
+            +dataListSearch(dataListSearch, optionsDataSearch)
+            +dataListSearch(dataListSearch2, optionsDataSearch2)
+        +sectionTotals(totals, "Stock")
+        +tableContent(stockAll, dataHead,actions,idField, "NO HAY STOCK REGISTRADO" )
+        +navPagination(page, totalPage) 

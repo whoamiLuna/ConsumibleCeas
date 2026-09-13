@@ -20,9 +20,9 @@ switch (role) {
     case 1:
         return res.redirect("/admin")
     case 2:
-        return res.redirect("/capture")
+        return res.redirect("/capturista")
     case 3: 
-    return res.redirect("/user")
+    return res.redirect("/client")
 
     default:
         return res.redirect("/404")

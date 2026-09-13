@@ -16,7 +16,12 @@ function showModalAll({btnAllSelector, classStringActive, btnCloseOnlySelector, 
         btn.addEventListener("click", e=>{
             e.preventDefault()
 
-        
+            const $btnAcept= document.querySelector(".acept")
+            
+            $btnAcept.dataset.url= e.currentTarget.dataset.url
+
+            console.log($btnAcept)
+
             return $modal.classList.add(classStringActive)
             
 

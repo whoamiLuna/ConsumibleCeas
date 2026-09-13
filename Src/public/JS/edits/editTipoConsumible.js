@@ -3,7 +3,6 @@ import formSubmit from "../formSubmit.js";
 
 
 
-
 const d=document;
 
 const idDataTipoConsumible= d.querySelector("#editTipoConsumible").dataset.id

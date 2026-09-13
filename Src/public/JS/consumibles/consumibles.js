@@ -2,7 +2,7 @@ import btnShowForm from "../btnShowForm.js";
 import formSubmit from "../formSubmit.js";
 import showModalAll from "../showModalAll.js";
 import modalShowDelete from "../modalShowDelete.js";
-
+import fetchFunction from "../fetchFunction.js";
 
 const d = document
 
@@ -32,4 +32,5 @@ d.addEventListener("DOMContentLoaded",e=>{
     btnShowForm(".ConsumibleBtn",".ConsumibleFormShow","formContainerShow-active",".ConsumibleCloseBtn")
     showModalAll({btnAllSelector:".container__item-deleteContainer", classStringActive:"modalActive",btnCloseOnlySelector:".cancel", classStringModal:".modalContainer"})   
     modalShowDelete({btnFetch:".container__item-deleteContainer"})  
+    fetchFunction({method:"POST", btn:".acept"})
 })

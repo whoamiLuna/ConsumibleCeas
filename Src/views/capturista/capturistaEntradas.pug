@@ -1,0 +1,20 @@
+extends ../layout.pug 
+include ../partials/tableContent.pug
+include ../partials/datalist.pug
+include ../partials/navPagination.pug
+include ../partials/totalBtn.pug
+include ../partials/formFolio.pug
+include ../partials/modalDelete.pug
+
+
+block content
+    +formFolio("AGREGAR ENTRADA",equipos,entradas)
+    +modalDelete()
+    section.main__entrada
+        h1.main__entrada-title ENTRADAS CONSUMIBLES
+        div.main__entradaTitleContent
+            +dataListSearch(dataListSearch, optionsDataSearch)
+            +dataListSearch(dataListSearch2, optionsDataSearch2)
+        +sectionTotals(totals, "Folios")
+        +tableContent(entradasAll, dataHead,actions,idField, "NO HAY ENTRADAS REGISTRADAS" )
+        +navPagination(page, totalPage)

@@ -17,6 +17,10 @@ html(lang="es")
         link(rel="stylesheet", href="/CSS/modalDelete.css")
         link(rel="stylesheet", href=style)
         link(href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css", rel="stylesheet")
+        if dataListSearch
+            link(rel="stylesheet", href="/CSS/dataList.css")
+        if entradas=== true || equipos=== true
+            link(rel="stylesheet", href="/CSS/formFolio.css")
         if totals && totals.length > 0
             link(rel="stylesheet", href="/CSS/totalsBtn.css")
         if inputs && inputs.length > 0

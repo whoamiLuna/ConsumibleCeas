@@ -82,7 +82,6 @@ width: 17rem;
     text-decoration: none;
     margin: .4rem;
     padding: .5rem;
-    border: 1px solid red;
 }
 
 
@@ -115,8 +114,8 @@ width: 17rem;
     border-radius: 1rem;
 }
 
-/** equipos */
-.Bueno{
+/** equipos and entradas */
+.Bueno,.Verificado{
     color:aquamarine;
     background-color: rgb(47, 124, 47);
     padding: .5rem;
@@ -168,6 +167,74 @@ width: 17rem;
     padding: .5rem;
     border-radius: .5rem;
 }
+
+
+
+/* ? ENTRADAS */
+
+.Pendiente{
+    color: white;
+    background-color: rgb(168, 157, 51);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+
+.Cancelado{
+    color: white;
+    background-color: rgb(151, 55, 71);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+
+/* ?  ENTRADAS AND SALIDAS */
+
+.archive{
+    color:#2f4766;
+}
+
+.details{
+    color: #171718;
+}
+
+/* ? STOCK */
+
+.tinta{
+    color: white;
+    background-color: rgb(224, 169, 85);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+.toner{
+    color: white;
+    background-color: rgb(110, 172, 60);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+.cartuchos{
+    color: white;
+    background-color: rgb(85, 122, 224);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+.tambor{
+    color: white;
+    background-color: rgb(233, 97, 43);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+.cinta{
+    color: white;
+    background-color: rgb(138, 100, 148);
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
 /*? responsive */
 
 

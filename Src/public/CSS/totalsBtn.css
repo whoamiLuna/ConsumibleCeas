@@ -1,12 +1,12 @@
 .section__totals{
-    width: 100%;
+    width: 98%;
     height: auto;
     min-height: 8rem;
     display: flex;
     flex-flow: column nowrap;
-    align-items: left;
     justify-content: center;
     gap: 1rem;
+    padding: .6rem;
 }
 
 .section__totals-title{

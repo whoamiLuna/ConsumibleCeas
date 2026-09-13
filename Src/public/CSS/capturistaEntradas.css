@@ -1,0 +1,48 @@
+.main__entrada{
+    width: 100%;
+    min-height: 100vh;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+
+.main__entrada-title{
+    font-size: 2.6rem;
+}
+
+
+.main__entradaTitleContent{
+    display: flex;
+    width: 60%;
+    height: auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content:space-evenly;
+}
+
+
+
+
+
+
+
+
+
+
+
+@media screen and (max-width:600px) {
+    .main__entradaTitleContent{
+        width: 100%;
+    }
+
+    .main__entrada-title{
+        font-size: 2.2rem;
+    }
+}
+
+
+

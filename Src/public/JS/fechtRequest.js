@@ -30,7 +30,8 @@ async function fetchRequest({method,dataBody,url}){
 
     const bodyJson = JSON.stringify(data)
 
-
+    console.log("data", bodyJson)
+    
     const request= await fetch(url,{
          method,
          body: bodyJson,

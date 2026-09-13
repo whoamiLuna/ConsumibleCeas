@@ -10,7 +10,7 @@ const $divContainerNotifications= document.querySelector(".notifications__msg")
 
 
 
-async function fetchExcel({url, nameExcel}){
+async function fetchExcel({url, nameExcel,redirectSuccess}){
     
 
     const request= await fetch(url)
@@ -58,7 +58,7 @@ async function fetchExcel({url, nameExcel}){
                     
                     $panelNotification.classList.add("notifications__active")
 
-                    $panelNotification.dataset.redirect= "/admin/equipos"
+                    $panelNotification.dataset.redirect= redirectSuccess
                 
             
 

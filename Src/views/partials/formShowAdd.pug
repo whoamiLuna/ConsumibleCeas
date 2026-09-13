@@ -13,11 +13,10 @@ mixin showFormAdd(formShowAdd,formShowInputs,classTarget,classClose)
                 if formShowAdd.selected.length > 0  
                     each select in formShowAdd.selected 
                         if select.multiple
-                            
                                 div.showForm__containerInput
                                     label.showForm__containerInput-label(for=select.id)
                                         i.containerInput__label-icon(class=select.class__icon)
-                                    select.showFormSelect(id=select.id, name=`${select.name}[]` required, multiple, class="multiple")
+                                    select.showFormSelect(id=select.id, name=`${select.name}` required, multiple, class="multiple")
                                         option.showForm__containerInput-option(name=select.defaultOption, selected , disabled)=select.defaultOption
                                         if select.options.length > 0
                                             each option in select.options
