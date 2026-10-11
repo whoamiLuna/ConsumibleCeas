@@ -9,7 +9,8 @@ import formaterTimeStamp from "../Helpers/formaterTimeStamp.js";
 import pdfKitLayout from "../Helpers/pdfKit_layout.js";
 import excelExport from "../Helpers/excelExport.js";
 import bodyValidateSalidas from "../public/JS/salidas/bodayValidateSalidas.js";
-
+import validateConsumiblesActive from "../Helpers/validateConsumiblesActive.js";
+  
 
 
 const routeCapturista= Router()
@@ -242,38 +243,27 @@ routeCapturista.post("/entradas",isAuthLogin(2),bodyValidateEntradas,validateExp
         const validation= await validateIdExist({table:"consumibles", column_name:"id_consumible", connection, idField:"id_consumible", arrayData: consumibles})
 
 
-        if(!validation.ok){
-            
-            await connection.rollback()
-            
-            return res.status(400).json({
-                ok:false,
-                message: validation.message,
-                redirect:"/capturista/entradas"
-            })    
-
-        }
-
+        if(!validation.ok){ throw new Error(validation.message)}
 
 
         //?VALIDATE STATUS CANCEL
 
-
-        if(status_entrada=== "CANCELADO"){
-
-            await connection.rollback()
-
-            return res.status(400).json({
-                ok:false,
-                message: "El folio esta cancelado, sin modificaciones",
-                redirect:"/capturista/entradas"
-            })
-        }
+        if(status_entrada=== "CANCELADO"){ throw new Error(`La entrada ha sido CANCELADA, sin agregar`)}
 
 
+        //?VALIIDATE ESTADO CONSUMIBLES 
 
+        const [consumiblesValidate]= await connection.query("SELECT id_consumible from consumibles where id_consumible IN(?) FOR UPDATE", [consumibles.map((c => Number(c.id_consumible)))])
 
+        console.log(consumiblesValidate.map(c => Number(c.id_consumible)))
+
+        const validateConsumiblesEstados=  await validateConsumiblesActive(consumiblesValidate.map(c => Number(c.id_consumible)), connection)
+
+        if(validateConsumiblesEstados.ok === false){ throw new Error(validateConsumiblesEstados.message)}
+
+        //? INSERT ENTRADA
         const [entradaAdd]= await connection.query("insert into entradas (status_entrada, user) values (?,?) ",[status_entrada, req.user.id_user])
+
         
         //!QUERYS ADD ENTRADA
         if(entradaAdd.affectedRows > 0){
@@ -315,16 +305,7 @@ routeCapturista.post("/entradas",isAuthLogin(2),bodyValidateEntradas,validateExp
                     
                     const [addStock]= await connection.query("insert into stock (id_consumible, cantidad) values ? on duplicate key update cantidad= cantidad + values(cantidad)", [stockData])
                     
-                    if(!addStock.affectedRows){
-                        
-                        await connection.rollback()
-                        
-                        return res.status(400).json({
-                            ok:false,
-                            message:`Error en la operacion de agregar la entrada al stock`,
-                            redirect:"/capturista/entradas"
-                        })
-                    }
+                    if(!addStock.affectedRows){ throw new Error(`Hubo un error al agregar los consumibles al stock`)}
 
                     await connection.commit()
                     
@@ -335,41 +316,21 @@ routeCapturista.post("/entradas",isAuthLogin(2),bodyValidateEntradas,validateExp
                     })
                 }else{
                     
-                    await connection.rollback()
-
-                    return res.status(400).json({
-                        ok:false,
-                        message:"Error al agregar entrada",
-                        redirect:"/capturista/entradas"
-                    })
-
+                    throw new Error(`Erro al agregar los consumibles en la tabla PIVOTE`)
 
                 }
 
                 
             }else{
 
-                await connection.rollback()
-                
-                return res.status(400).json({
-                    ok:false,
-                    message:`Error al insertar el folio correspondiente`,
-                    redirect:"/capturista/entradas"
-                })
-
+                    throw new Error("Error al crear el folio correspondiente de entrada")
             }
            
             
 
         }else{
             
-            await connection.rollback()
-
-            return  res.status(400).json({
-                 ok:false,
-                 message:`Error al crear folio de entrada`,
-                 redirect:"/capturista/entradas"
-            })
+           throw new Error("Error al agregar los datos preliminares de la tabla")
 
 
         }
@@ -380,13 +341,15 @@ routeCapturista.post("/entradas",isAuthLogin(2),bodyValidateEntradas,validateExp
 
         await connection.rollback()
 
-        return res.status(500).json({
+        return res.status(400).json({
             ok:false,
-            message: `Error de servidor: ${error}`,
+            message: `${error.message}`,
             redirect:"/capturista/entradas"
         })
 
     }finally{
+
+
         connection.release()
 
     }
@@ -451,7 +414,7 @@ const updateEntrada= {
     user: req.user.id_user
 }
 
-const [[entradaFolioStatus]]= await pool.query("select id_entradas, status_entrada from entradas where id_entradas = ?", [id])
+const [[entradaFolioStatus]]= await pool.query("select id_entradas,folio, status_entrada from entradas where id_entradas = ?", [id])
 
 
 
@@ -462,90 +425,43 @@ try {
     
     await connection.beginTransaction()
     
-    const [idEntradas]= await connection.query("select id_entradas from entradas")
-
     //?VALIDATE CANCEL STATUS
     
-    if(entradaFolioStatus.status_entrada === "CANCELADO"){
-        
-        await connection.rollback()
-
-        return res.status(400).json({
-            ok:false,
-            message:"El folio esta cancelado, sin modificación",
-            redirect:"/capturista/entradas"
-        })
-
-    }
+    if(entradaFolioStatus.status_entrada === "CANCELADO"){ `La entrada ${entradaFolioStatus.folio} ya esta cancelada, sin modificaciones`}
 
 
     //?VALIDATE VERIFICADO ENTRADA
-    if(entradaFolioStatus.status_entrada==="VERIFICADO"){
-        
-        await connection.rollback()
-
-        return res.status(400).json({
-            ok:false,
-            message:"La entrada ya esta verificada, sin modificaciones",
-            redirect:"/capturista/entradas"
-        })
-    }
+    if(entradaFolioStatus.status_entrada==="VERIFICADO"){`La entrada ${entradaFolioStatus.folio} esta verificada, sin modificaciones`}
     
     //?VALIDATE ID
 
     const validatation= await validateIdExist({arrayData: consumibles, idField:"id_consumible", column_name:"id_consumible", table:"consumibles", connection})
 
 
-    if(!validatation.ok){
-        
-        await connection.rollback()
+    if(validatation.ok=== false){ throw new Error(validatation.message)}
 
 
-        return res.status(400).json({
-            ok:false,
-            message: validatation.message,
-            redirect:"/capturista/entradas"
-         })
-    }
+    //?VALIDATE CONSUMIBLES ESTADO
 
+    const [consumiblesValidate]= await connection.query("select id_consumible from consumibles where id_consumible in(?) for UPDATE",[consumibles.map(c => Number(c.id_consumible))])
 
+    const validateConsumiblesEstado= await validateConsumiblesActive(consumiblesValidate.map(c => Number(c.id_consumible)), connection)
+
+    if(validateConsumiblesEstado.ok === false){ throw new Error(validateConsumiblesEstado.message)}
 
     //?UPDATE ENTRADA (STATUS AND DATA)
 
     const [update]= await connection.query("update entradas set ? where id_entradas= ?", [updateEntrada, id])
 
 
-     if(!update.affectedRows){
-        
-        await connection.rollback()
-
-        return res.status(400).json({
-            
-            ok:false,
-            message: `Hubo un error al Actualizar el status ${status_entrada}`,
-            redirect:"/capturista/entradas"
-        })
-
-     }
-
-
+     if(!update.affectedRows){ throw new Error(`Hubo un error al actualizar el estado ${status_entrada}`)}
 
 
      //?DELETE OLD DATA
 
     const [deleteEntrada]= await connection.query("delete from entrada_consumible where id_entrada = ?", [id])
 
-    if(deleteEntrada.affectedRows === 0){
-
-        await connection.rollback()
-
-        return res.status(400).json({
-            ok:false,
-            message:`Error al borrar los datos de entrada`,
-            redirect:"/capturista/entradas"
-        })
-
-    }
+    if(deleteEntrada.affectedRows === 0){ throw new Error("Hubo un error al borrar los datos antiguos de la entrada")}
 
 
 
@@ -555,17 +471,7 @@ try {
 
     const [insertNewEntrada]=await connection.query("insert into entrada_consumible (id_entrada,id_consumible, cantidad) values ?", [consumiblesUpdate])
 
-    if(insertNewEntrada.affectedRows === 0){
-        
-        await connection.rollback()
-
-        return res.status(400).json({
-            ok:false,
-            message:`Error al agregar los consumibles`,
-            redirect:"/capturista/entradas"
-        })
-
-    }
+    if(insertNewEntrada.affectedRows === 0){"Hubo un error al agregar los consumibles"}
 
 
     //!VALIDATE STATUS PENDIENTE
@@ -590,18 +496,7 @@ try {
 
     const [updateStock]= await connection.query("insert into stock (id_consumible, cantidad) values ? on duplicate key update cantidad= cantidad + values(cantidad)",[stockNew])
 
-    if(updateStock.affectedRows === 0){
-        
-        await connection.rollback()
-
-        return res.status(400).json({
-            ok:false,
-            message:"Error al agrear los consumibles al stock",
-            redirect:"/capturista/entradas"
-        })
-
-
-    }
+    if(updateStock.affectedRows === 0){ throw new Error("Hubo un error al agregar los consumibles")}
 
     //TODO VALIDATION VERIFICADO  
 
@@ -627,7 +522,7 @@ await connection.rollback()
 
 return res.status(400).json({
     ok:false,
-    message:`Error: ${error}`,
+    message:`${error.message}`,
     redirect:"/capturista/entradas"
 })
 
@@ -2094,6 +1989,57 @@ routeCapturista.get("/salidas/export", isAuthLogin(2), async (req,res, next)=>{
 
 
 
+//! ESTADISTICAS
+
+routeCapturista.get("/chart", isAuthLogin(2), async( req, res)=>{
+
+
+    res.render("temp/mantenimiento.pug",{
+        titles:"Estadistica",
+        description: "MANTENIMIENTO DE APLICACION",
+        style:"/CSS/mantenimiento.css",
+        Script: "/JS/entradas/stockCapturista.js",
+        navItems:[ //? icons nav render role
+            
+             {
+                class_icon: "fas fa-truck-loading",
+                spanTitle:"Entradas",
+                hrefNav:"/capturista/entradas",
+                
+             },{
+                class_icon:"fas fa-dolly",
+                spanTitle:"Salidas",
+                hrefNav:"/capturista/salidas",
+             },
+            {
+                class_icon:"fas fa-people-carry",
+                spanTitle:"Stock",
+                hrefNav:"/capturista/stock",
+            },{
+                class_icon:"fas fa-chart-area",
+                spanTitle:"Estadistica",
+                hrefNav:"/capturista/chart",
+            },
+            {
+                class_icon:"fas fa-door-open",
+                spanTitle:"Cerrar Sesion",
+                hrefNav:"/logOut",
+            }],  
+
+    })
+})
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2115,7 +2061,7 @@ const [findEntrada]= await pool.query("select id_entradas, folio, fecha_entrada,
 
 const findEntradaTimeStamp= findEntrada.map(e=> ({...e,fecha_entrada: formaterTimeStamp({date:e.fecha_entrada})}))
 
-const [entrada_consumible]= await pool.query("select en.id_entrada,c.consumible, en.cantidad from entrada_consumible en inner join consumibles c on c.id_consumible = en.id_consumible where en.id_entrada = ?", [id])
+const [entrada_consumible]= await pool.query("select en.id_entrada,c.consumible, en.cantidad from entrada_consumible en inner join consumibles c on c.id_consumible = en.  id_consumible where en.id_entrada = ?", [id])
 
 const [[total_entradas]]= await pool.query("select sum(cantidad) as total from entrada_consumible where id_entrada= ?", [id])
 
@@ -2179,11 +2125,6 @@ const salidaEquiposPDF= salidasEquipos.map((e,index)=>[index +1, e.tipo_de_equip
 //todo query total consumibles salidas
 
 const [[totalSalidas]]= await pool.query("select sum(cantidad) as total from salida_consumible where id_salida=?", [id])
-
-console.log(salidaConsumible)
-console.log(salidasEquipos)
-
-console.log(salidasConsumiblePDF)
 
 
 if(!findSalida.length > 0){

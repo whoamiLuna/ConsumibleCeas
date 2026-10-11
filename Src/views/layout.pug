@@ -45,6 +45,10 @@ html(lang="es")
                         a.navItems__li-a(href=item.hrefNav, title=item.spanTitle)
                             i.li__a-icon(class=item.class_icon)
                             span.li__a-span= item.spanTitle
+            if user
+                article.aside__user(title="Usuario")
+                    i.aside__user-icon(class="fas fa-user-circle")
+                    span.aside__user-name= user ? user.fullname : "Sin usuario"
         +notifications()
         main.main
             block content  

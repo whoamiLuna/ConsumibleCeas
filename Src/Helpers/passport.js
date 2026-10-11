@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy } from "passport-local";
 import pool from "./conecctionsdb.js";
 import { encryptPassword, comparePassword } from "./brcript.js";
-
+import variablesHelpers from "./varHelpers.js";
 
 passport.use("local.signup",new Strategy({
      usernameField: "username",
@@ -10,8 +10,9 @@ passport.use("local.signup",new Strategy({
      passReqToCallback: true
 },async (req,username,password,done)=>{
     
-const {fullname, role} = req.body
+const {fullname, role, estado} = req.body
 
+if(!variablesHelpers.estados.includes(estado)){ return done(null,false,{message: "El estado del usuario no es valido, intente de nuevo"})}
 
 const [searchUser]= await pool.query("select username, fullname from users where username= ? OR fullname = ?",[username,fullname])
 
@@ -32,7 +33,8 @@ if(!encrypt){
           username,
           password: encrypt,
           fullname,
-          role
+          role,
+          estado
           }
 
           
@@ -42,11 +44,9 @@ if(!encrypt){
 
                if(userAdd.affectedRows > 0){
                     
-                        const userSession= {
-                        ...newUser,
-                        id_user: userAdd.insertId
-                       }
+                        
                        return done(null, {created:true},{message: `El usuario ${username} se ha creado satisfactoriamente`})
+
                    }else{
                          return done(null,false,{message: "Error al crear al usuario en la base de datos"}) 
                    }
@@ -105,6 +105,10 @@ const [searchLoginUser]= await pool.query("select * from users where username= ?
 if(searchLoginUser.length > 0){
      const userFind= searchLoginUser[0]
      
+     if(userFind.estado==="INACTIVO"){
+          return done(null, false, {message:`El usuario ${userFind.username} esta Inactivo, no puede iniciar sesión`})
+     }
+
      const passwordDecrypt= await comparePassword(password,userFind.password)
 
      if(passwordDecrypt === true){

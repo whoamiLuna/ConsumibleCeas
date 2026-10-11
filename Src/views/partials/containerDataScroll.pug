@@ -29,7 +29,5 @@ mixin containerData(containerData,dataListSearch,optionsData)
                         div.item__containerData-btns
                             a.container__item-editContainer(href=`${containerData.hrefRute}/${item[containerData.idField]}`,title="EDITAR") 
                                     i.item__editContainer(class="fas fa-edit")
-                            a.container__item-deleteContainer(data-url=`${containerData.hrefRuteDelete}/${item[containerData.idField]}`,title="ELIMINAR") 
-                                    i.item__editContainer(class="fas fa-trash") 
         else
             p.containerContent__empty NO HAY DATOS INGRESADOS

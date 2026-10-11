@@ -1,14 +1,16 @@
 
 
-mixin modalDelete()
+mixin modalDelete(message)
     div.modalContainer
         article.modalDelete
             div.modalDelete__contentTitle
                 i.modalDelete__contentTitle-icon(class="fas fa-exclamation-triangle")
-                h3.modalDelete__contentTitle-title Eliminaras permanentemente lo siguiente: 
+                h3.modalDelete__contentTitle-title Afectaras lo siguiente: 
             div.modalDelete__contentData
+                if message
+                    p.modalDelete__contentData-text=message
             div.modalDelete__contentConfirm
-                h3.modalDelete__contentConfirm ¿Desea continuar con la operacion?
+                h3.modalDelete__contentConfirm ¿Desea continuar con la operación?
                 div.modalDelete__contentConfirm-btn
                     button.contentConfirm__btn-choose.acept Confirmar
                     button.contentConfirm__btn-choose.cancel Cancelar

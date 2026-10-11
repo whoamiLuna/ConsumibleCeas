@@ -15,8 +15,9 @@ import bodyValidateConsumible from "../public/JS/consumibles/bodyValidateConsumi
 import bodyValidateAddUsers from "../public/JS/admin/bodyValidateAddUsers.js";
 import bodyValidateEquipos from "../public/JS/equipos/bodyValidateEquipos.js";
 import excelExport from "../Helpers/excelExport.js";
-
-
+import variablesHelpers from "../Helpers/varHelpers.js";
+import validateConsumiblesActive from "../Helpers/validateConsumiblesActive.js";
+import validateTipoEquipoActive from "../Helpers/validateEquiposActive.js";
 
 const routeAdmin= Router()
 
@@ -34,10 +35,6 @@ const tiposEquiposManual=[{
                     {value:"NO-BREAK", valueText:"NO-BREAK"},
                     {value:"TELEFONO", valueText:"TELEFONO"}]
 
-
-
-
-
 //todo redirect main route 
 routeAdmin.get("/",isAuthLogin(1),(req,res)=>{
     
@@ -52,7 +49,7 @@ routeAdmin.get("/users", isAuthLogin(1),async (req, res)=>{
     
     let page= parseInt(req.query.page || 1)
     const userSearch= req.query.user
-    const limit= 3   //?rango de busqueda
+    const limit= 10 //?rango de busqueda
     const offset= (page -1) * limit //?donde empiza la busqueda (ignora desde y traeme los siguientes)
     
     const [usersFullSearch]= await pool.query("select u.id_user, u.fullname from users u where u.fullname != 'Administrador'") || "No hay usuarios disponibles"
@@ -62,7 +59,7 @@ routeAdmin.get("/users", isAuthLogin(1),async (req, res)=>{
 
     if(userSearch){ 
      
-        const [searchUsers]= await pool.query(`select u.username, u.fullname, r.role from users u inner join roles r on r.id_role = u.role where r.role != "Admin" and u.fullname = ?`,[userSearch])
+        const [searchUsers]= await pool.query(`select u.username, u.fullname, u.estado, r.role from users u inner join roles r on r.id_role = u.role where r.role != "Admin" and u.fullname = ?`,[userSearch])
         
         const [[{total_users:count}]]= await pool.query(`select count(*) as total_users from users u where u.fullname like ? `,[`%${userSearch}$`])
 
@@ -73,7 +70,7 @@ routeAdmin.get("/users", isAuthLogin(1),async (req, res)=>{
         
         const [[{total_users:count}]]= await pool.query("select count(*) as total_users from users u inner join roles r on u.role = r.id_role where r.role !='Admin' ")
         
-        const [users] = await pool.query("select u.id_user, u.username, u.fullname, r.role from users u inner join roles r on u.role = r.id_role where r.role != 'Admin' limit ? offset ? ",[limit,offset])
+        const [users] = await pool.query("select u.id_user, u.username, u.fullname, u.estado, r.role from users u inner join roles r on u.role = r.id_role where r.role != 'Admin' limit ? offset ? ",[limit,offset])
         
         usersAll= users
         totalUsers=count
@@ -109,19 +106,15 @@ routeAdmin.get("/users", isAuthLogin(1),async (req, res)=>{
             {key:"fullname", valueHeadText:"Nombre Completo" },
             {key:"role", valueHeadText:"Role",
             cellClass: (value)=> value==="Capturista" ? "Capturista" : "" || value==="Cliente" ? "Cliente" : ""},
+            {key:"estado", valueHeadText:"Estado",
+            cellClass: (value)=> value==="ACTIVO" ? "ACTIVO" : "" || value==="INACTIVO" ? "INACTIVO" : ""},
         ],
         actions:[
            {
             type:"edit",
             icon:"far fa-edit",
             href:"/admin/users/edit/"
-           },{
-            type:"delete",
-            icon:"fas fa-trash-alt",
-            href:"/admin/users/user/delete/"
-           }
-            
-        ],
+           },],
         navItems:[ //? icons nav render role
             
              {
@@ -158,6 +151,13 @@ routeAdmin.get("/users", isAuthLogin(1),async (req, res)=>{
                     class__icon:"fas fa-user-tag",
                     defaultOption:"Selecciona un Role",
                     options:[{ value:2,valueText:"Capturista"},{value:3,valueText:"Cliente"}]
+                    
+             },{
+                    id:"selectUserEstado",
+                    name:"estado",
+                    class__icon:"fas fa-user-shield",
+                    defaultOption:"Selecciona un Estado",
+                    options:[{ value:"ACTIVO",valueText:"ACTIVO"},{value:"INACTIVO",valueText:"INACTIVO"}]
                     
              }] 
         },
@@ -220,9 +220,10 @@ if(!numbers.includes(id)){
 }
 
 
-const [userSearch]= await pool.query("select u.id_user, u.fullname,u.username, r.role from users u inner join roles r on id_role= u.role where id_user= ?",[id])
+const [userSearch]= await pool.query("select u.id_user, u.fullname,u.username, r.role, u.estado from users u inner join roles r on id_role= u.role where id_user= ?",[id])
 
 const [roles]= await pool.query("select id_role, role from roles where role!= 'Admin'")
+
 
 res.render("Edits/edits.pug",{
         titles:"USUARIOS",
@@ -277,12 +278,20 @@ res.render("Edits/edits.pug",{
                     labelTitle:"Nombre:",
                     value:userSearch[0].fullname
                 }, {
-                    type:"text",
+                    type:"password",
                     placeholder:"Escribe la nueva Contraseña...",
                     name:"password",
                     id:"passwordEdit",
                     labelTitle:"Contraseña:",
                 
+                },{
+                    type:"select",
+                    placeholder:"Escribe el estado del usuario...",
+                    name:"estado",
+                    id:"estadoEdit",
+                    labelTitle:"Estado:",
+                    value:userSearch[0].estado,
+                    options:[{value:"ACTIVO", valueText:"Activo"},{value:"INACTIVO", valueText:"Inactivo"}]
                 },
                 {
                     type:"select",
@@ -314,7 +323,7 @@ routeAdmin.post("/users/edit/:id", isAuthLogin(1), bodyValidateAddUsers, async (
 
 const id= parseInt(req.params.id)
 
-const {username, fullname, role, password}= req.body
+const {username, fullname, role, password, estado}= req.body
 
 const parseRole= parseInt(role)
 
@@ -322,6 +331,16 @@ const parseRole= parseInt(role)
 const [idUsers]= await pool.query("select id_user from users")
 
 const numbers= idUsers.map(u => u.id_user)
+
+//*todo validate estado
+
+if(!variablesHelpers.estados.includes(estado)){
+    return res.status(400).json({
+        ok:false,
+        message:`Este ${estado} es invalido`,
+        redirect:"/admin/users"
+    })
+}
 
 if(!numbers.includes(id)){
     
@@ -334,7 +353,7 @@ if(!numbers.includes(id)){
     
 }
 
-const [userSearch]= await pool.query("select id_user,username, fullname, role from users where (username= ? or  fullname= ?) and id_user!= ?",[username,fullname,id])
+const [userSearch]= await pool.query("select id_user,username, fullname, role, estado from users where (username= ? or  fullname= ?) and id_user!= ?",[username,fullname,id])
 
 
 if (userSearch.length > 0 ){
@@ -365,7 +384,8 @@ const newUser={
     username,
     fullname,
     role:parseRole,
-    password: newPassword
+    password: newPassword,
+    estado
 
 }
 
@@ -397,49 +417,6 @@ if (updateUser.affectedRows > 0){
 
 
 
-//TODO GET DELETE USERS
-
-routeAdmin.get("/users/user/delete/:id", isAuthLogin(1), async (req, res)=>{
-    
-    const id= parseInt(req.params.id)
-
-    const [idUsers]= await pool.query("select id_user from users")
-
-    const idNumbers= idUsers.map(u => u.id_user)
-
-    const [[totalUsersAffected]]= await pool.query("select count(*) as totalIdUsers, (select count(*) from equipos where user= ?) as totalUserEquipos, (select count(*) from entradas where user= ?) as totalUserEntradas, (select count(*) from salidas where user= ?) as totalUserSalidas from users where id_user= ?", [id,id,id,id])
-
-
-    if(!idNumbers.includes(id)){
-        return res.redirect("/admin/users")
-    
-    } 
-    
-    return res.status(200).json({
-        ok:true,
-        dataTotals: [
-            {label: "Total Usuario: ", value:  totalUsersAffected.totalIdUsers},
-            {label: "Total Usuario Equipos: ", value: totalUsersAffected.totalUserEquipos},
-            {label: "Total Usuario Entradas: ", value: totalUsersAffected.totalUserEntradas},
-            {label: "Total Usuario Salidas: ", value: totalUsersAffected.totalUserSalidas}
-        
-    ]
-    })
-
-
-
-})
-
-
-
-
-
-
-
-
-
-
-
 //!EQUIPOS Y AREAS
 
 
@@ -451,11 +428,14 @@ routeAdmin.get("/areas",isAuthLogin(1), async (req,res)=>{
     const orderDirections= req.query.orderDirections //?query orderDirecciones
 
     //todo querys content Direcciones
-    const [direcciones]= await pool.query("select id_direccion,direccion from direcciones")
 
-    const [orderDirecciones] = await pool.query("select id_direccion,direccion from direcciones order by direccion desc")
+    const [direccionesDatalist]= await pool.query("select id_direccion, direccion from direcciones where estado= 'ACTIVO'")
 
-    const [direccionSelect]= await pool.query("select id_direccion, direccion from direcciones where direccion= ?",[direccionSearch])
+    const [direcciones]= await pool.query("select id_direccion,direccion, estado from direcciones")
+
+    const [orderDirecciones] = await pool.query("select id_direccion,direccion, estado from direcciones order by direccion desc")
+
+    const [direccionSelect]= await pool.query("select id_direccion, direccion, estado from direcciones where direccion= ?",[direccionSearch])
 
     //todo render content direcciones
     let direccionesALL= []
@@ -483,11 +463,11 @@ routeAdmin.get("/areas",isAuthLogin(1), async (req,res)=>{
 
     const orderAreas= req.query.orderAreas
     
-    const [areas]= await pool.query("select a.id_area,d.direccion,a.area from areas a inner join direcciones d on d.id_direccion= a.direccion")
+    const [areas]= await pool.query("select a.id_area,d.direccion,a.area, a.estado from areas a inner join direcciones d on d.id_direccion= a.direccion")
 
-    const [areaFind]= await pool.query("select id_area,direccion,area from areas where area= ?",[areaSearch])
+    const [areaFind]= await pool.query("select a.id_area,d.direccion,a.area, a.estado from areas a inner join direcciones d on d.id_direccion= a.direccion where area= ?",[areaSearch])
 
-    const[areasOrder]= await pool.query("select a.id_area,d.direccion,a.area from areas a inner join direcciones d on d.id_direccion= a.direccion order by a.area asc")
+    const[areasOrder]= await pool.query("select a.id_area,d.direccion,a.area, a.estado from areas a inner join direcciones d on d.id_direccion= a.direccion order by a.area asc")
 
     areasAll= areas
 
@@ -540,7 +520,7 @@ routeAdmin.get("/areas",isAuthLogin(1), async (req,res)=>{
                 idField: "id_direccion",   
                 hrefRute:"/admin/areas/direccion/edit",
                 hrefRuteDelete:"/admin/areas/direccion/delete",
-                headTitles:["Direccion"],
+                headTitles:["Direccion", "Estado"],
                 optionsBtn:[{
                     Title:"Agregar",
                     contentText:"Agregar Direccion",
@@ -570,7 +550,14 @@ routeAdmin.get("/areas",isAuthLogin(1), async (req,res)=>{
                 idForm: "formAddDireccion",
                 title:"AGREGAR DIRECCION",
                 valueSubmit:"Agregar Area",
-                selected:[]
+                selected:[{
+                    id:"selectUserEstado",
+                    name:"estado",
+                    class__icon:"fas fa-shield-alt",
+                    defaultOption:"Selecciona un Estado",
+                    options:[{ value:"ACTIVO",valueText:"ACTIVO"},{value:"INACTIVO",valueText:"INACTIVO"}]
+                    
+             }]
             },
             formShowInputs:[{
                 id:"direccion",
@@ -595,7 +582,7 @@ routeAdmin.get("/areas",isAuthLogin(1), async (req,res)=>{
                 idField:"id_area",
                 hrefRute:"/admin/areas/areas/edit",
                 hrefRuteDelete:"/admin/areas/area/delete",
-                headTitles:["Direccion", "Area"],
+                headTitles:["Direccion", "Area", "Estado"],
                 optionsBtn:[
                     {
                     Title:"Agregar",
@@ -622,11 +609,18 @@ routeAdmin.get("/areas",isAuthLogin(1), async (req,res)=>{
                     class__icon:"fas fa-building",
                     name:"direccion",
                     defaultOption:"Seleccione una Direccion",
-                    options:direcciones.map(d => { return {
+                    options:direccionesDatalist.map(d => { return {
                         value:d.id_direccion,
                         valueText: d.direccion
-                    }})
-                }]
+                    }}),
+                }, {
+                    id:"selectUserEstado",
+                    name:"estado",
+                    class__icon:"fas fa-shield-alt",
+                    defaultOption:"Selecciona un Estado",
+                    options:[{ value:"ACTIVO",valueText:"ACTIVO"},{value:"INACTIVO",valueText:"INACTIVO"}]
+                    
+             }]
             },formShowInputs2:[{
                 id:"Area",
                 classIcon:"fas fa-school",
@@ -649,7 +643,7 @@ routeAdmin.get("/areas",isAuthLogin(1), async (req,res)=>{
 
 routeAdmin.post("/areas/direccion", isAuthLogin(1),bodyValidateDirecciones,validateExpressErrors("/admin/areas"),  async (req, res) => {
 
-    const { direccion } = req.body;
+    const { direccion, estado } = req.body;
 
     const [direccionFind]= await pool.query("select direccion from direcciones where direccion= ?",[direccion]) 
 
@@ -663,7 +657,7 @@ routeAdmin.post("/areas/direccion", isAuthLogin(1),bodyValidateDirecciones,valid
             })  
         }else{
             
-        const [areaAdd] = await pool.query("INSERT INTO direcciones SET ?",{ direccion: direccion });
+        const [areaAdd] = await pool.query("INSERT INTO direcciones SET ?",{ direccion: direccion, estado });
 
         if (areaAdd.affectedRows > 0) {
         
@@ -701,10 +695,10 @@ routeAdmin.get("/areas/direccion/edit/:id",isAuthLogin(1), async (req,res)=>{
     
     const id= parseInt(req.params.id)
 
-    const [direccionEdit]= await pool.query("select id_direccion,direccion from direcciones where id_direccion=?",[id])
+    const [direccionEdit]= await pool.query("select id_direccion,direccion, estado from direcciones where id_direccion=?",[id])
 
-    const [getDirecciones]= await pool.query("select id_direccion,direccion from  direcciones")
-
+    const [getDirecciones]= await pool.query("select id_direccion,direccion from direcciones")
+ 
     const idDirecciones= getDirecciones.map(d=> d.id_direccion)
 
     if(!idDirecciones.includes(id)){
@@ -758,7 +752,15 @@ routeAdmin.get("/areas/direccion/edit/:id",isAuthLogin(1), async (req,res)=>{
                     value:direccionEdit[0].direccion
                     
 
-                },
+                },{
+                    type:"select",
+                    placeholder:"Escribe el estado del usuario...",
+                    name:"estado",
+                    id:"estadoEdit",
+                    labelTitle:"Estado:",
+                    value:direccionEdit[0].estado,
+                    options:[{value:"ACTIVO", valueText:"Activo"},{value:"INACTIVO", valueText:"Inactivo"}]
+                }
                 
             ]
 
@@ -779,19 +781,15 @@ routeAdmin.get("/areas/direccion/edit/:id",isAuthLogin(1), async (req,res)=>{
 //TODO UPDATE EDIT DIRECCION
 
 
-routeAdmin.post("/areas/direccion/edit/:id",isAuthLogin(1),bodyValidateDireccionesEdit,validateExpressErrors("/admin/areas"),async (req,res)=>{
+routeAdmin.post("/areas/direccion/edit/:id",isAuthLogin(1),bodyValidateDirecciones,validateExpressErrors("/admin/areas"),async (req,res)=>{
 
-    const {direccion} = req.body
+    const {direccion, estado} = req.body
     
     const id= parseInt(req.params.id)
-
-    console.log(id)
 
     const [getDirecciones]= await pool.query("select id_direccion,direccion from  direcciones")
 
     const idDirecciones= getDirecciones.map(d=> d.id_direccion)
-
-    console.log(idDirecciones)
 
     if(!idDirecciones.includes(id)){
         return res.status(400).json({
@@ -802,13 +800,13 @@ routeAdmin.post("/areas/direccion/edit/:id",isAuthLogin(1),bodyValidateDireccion
 
     }
 
-    const [[direccionFind]]=await pool.query("select direccion from direcciones where direccion= ?", [direccion])
+    const [direccionFind]=await pool.query("select direccion from direcciones where direccion= ? and id_direccion != ?", [direccion, id])
 
 
-        if(!direccionFind){
+        if(direccionFind.length === 0){
     
             try {
-                const [newDireccion]= await pool.query("update direcciones set direccion= ? where id_direccion= ?",[direccion,id])
+                const [newDireccion]= await pool.query("update direcciones set direccion= ?, estado= ? where id_direccion= ?",[direccion,estado,id])
                 
                 if(newDireccion.affectedRows > 0){
                     
@@ -854,11 +852,25 @@ routeAdmin.post("/areas/direccion/edit/:id",isAuthLogin(1),bodyValidateDireccion
 
 routeAdmin.post("/areas/areas",isAuthLogin(1),bodyValidateAreas,validateExpressErrors("/admin/areas"),async (req,res)=>{
      
-    const {area,direccion}=req.body
+    const {area,direccion, estado}=req.body
 
     parseInt(direccion)
 
-    const [[areaFind]]= await pool.query("Select id_area,direccion, area from areas where area= ?",[area])
+    const [[areaFind]]= await pool.query("Select a.id_area,d.direccion, a.area, a.estado from areas a inner join direcciones d on d.id_direccion = a.direccion where a.area= ?",[area])
+
+    const [[direccionValidate]]= await pool.query("select direccion, estado from direcciones where id_direccion= ?", [direccion])
+
+    //? validate direccion estado
+
+    if(direccionValidate.estado === "INACTIVO"){
+        
+        return res.status(400).json({
+            ok:false,
+            message: `No puedes crear un area de ${direccionValidate.direccion} por que esta inactiva`,
+            redirect:"/admin/areas"
+        })
+    }
+
 
     if(areaFind){
         
@@ -870,7 +882,7 @@ routeAdmin.post("/areas/areas",isAuthLogin(1),bodyValidateAreas,validateExpressE
         })
     }
 
-    const [newArea]= await pool.query("insert into areas set ?",{area,direccion})
+    const [newArea]= await pool.query("insert into areas set ?",{area,direccion, estado})
 
     if(newArea.affectedRows > 0){
         return res.status(200).json({
@@ -898,9 +910,9 @@ routeAdmin.get("/areas/areas/edit/:id",isAuthLogin(1), async (req,res)=>{
       
     const [idAreas] = await pool.query("select id_area from areas")
 
-    const [[area]]= await pool.query("select a.id_area,d.direccion,a.area from areas a inner join direcciones d on id_direccion = a.direccion where id_area= ?",[id])
+    const [[area]]= await pool.query("select a.id_area,d.direccion,a.area,a.estado from areas a inner join direcciones d on id_direccion = a.direccion where id_area= ?",[id])
 
-    const [direcciones]= await pool.query("select id_direccion, direccion from direcciones")
+    const [direcciones]= await pool.query("select id_direccion, direccion from direcciones where estado='ACTIVO'")
     
     const idAreasMap= idAreas.map(a => a.id_area)
     
@@ -911,14 +923,13 @@ routeAdmin.get("/areas/areas/edit/:id",isAuthLogin(1), async (req,res)=>{
         }
     })
 
-    
+   
 
     if(!idAreasMap.includes(id)){
         return res.redirect("/admin/areas")
     }
 
-
-
+   
     //?render
     res.render("Edits/edits.pug",{
 
@@ -972,6 +983,14 @@ routeAdmin.get("/areas/areas/edit/:id",isAuthLogin(1), async (req,res)=>{
                     id:"Direccion",
                     value:area.direccion,
                     options: direcionesMap
+                },{
+                    type:"select",
+                    placeholder:"Escribe el estado del usuario...",
+                    name:"estado",
+                    id:"estadoEdit",
+                    labelTitle:"Estado:",
+                    value:area.estado,
+                    options:[{value:"ACTIVO", valueText:"Activo"},{value:"INACTIVO", valueText:"Inactivo"}]
                 }
             ]
 
@@ -988,7 +1007,7 @@ routeAdmin.get("/areas/areas/edit/:id",isAuthLogin(1), async (req,res)=>{
 
 routeAdmin.post("/areas/areas/edit/:id", async (req,res)=>{
     
-    let {area, direccion}=  req.body
+    let {area, direccion,estado}=  req.body
 
     const id= parseInt(req.params.id)
 
@@ -1009,11 +1028,33 @@ routeAdmin.post("/areas/areas/edit/:id", async (req,res)=>{
         })
     }
 
+     //? estatus direccion
 
+    const [[direccionStatus]]= await pool.query("select id_direccion, direccion,estado from direcciones where id_direccion= ?", [direccion])
+
+    if(!direccionStatus){
+
+        return res.status(400).json({
+            ok:false,
+            message: `El area ${area.area} contiene una dirección invalida`,
+            redirect:"/admin/areas"
+        })
+    }
+
+     //? direccion estado validation 
+
+    if(direccionStatus.estado === "INACTIVO"){
+        
+       return  res.status(400).json({
+            ok:false,
+            message:`No se puede modificar un area de la dirección ${direccionStatus.direccion} INACTIVA`,
+            redirect:"/admin/areas"
+        })
+    }
 
     if(idAreasMap.includes(id)){
     
-        const [updateArea]= await pool.query("update areas set area= ?, direccion= ? where id_area= ?", [area,direccion,id])
+        const [updateArea]= await pool.query("update areas set area= ?, direccion= ?, estado= ? where id_area= ?", [area,direccion,estado, id])
 
         if(updateArea.affectedRows > 0){
             
@@ -1044,47 +1085,6 @@ routeAdmin.post("/areas/areas/edit/:id", async (req,res)=>{
 
 
 
-})
-
-
-
-
-
-
-
-
-
-
-
-//TODO GET DELETE AREAS
-
-
-routeAdmin.get("/areas/direccion/delete/:id", isAuthLogin(1), async (req, res)=>{
-    
-    const id= parseInt(req.params.id)
-
-    const [idDirecciones]= await pool.query("select id_direccion from direcciones")
-
-    const idNumbers= idDirecciones.map(d => d.id_direccion)
-
-    const [[totalDireccionAffected]]= await pool.query("select count(*) as totalIdDirecciones, (select count(*) from areas where direccion= ?) as totalDireccionesAreas,(select count(*) from equipos e inner join areas a on a.id_area= e.area where a.direccion= ?) as totalDireccionesEquipos from direcciones where id_direccion= ?", [id,id,id])
-
-
-    if(!idNumbers.includes(id)){
-        return res.redirect("/admin/equipos")
-    
-    } 
-    
-    return res.status(200).json({
-        ok:true,
-        dataTotals: [
-            {label: "Total Direccion: ", value:  totalDireccionAffected.totalIdDirecciones},
-            {label: "Total Direccion en Areas: ", value: totalDireccionAffected.totalDireccionesAreas},
-            {label: "Total Equipos de Direccion: ", value: totalDireccionAffected.totalDireccionesEquipos}
-        
-    ]
-    })
-
 
 
 })
@@ -1095,116 +1095,9 @@ routeAdmin.get("/areas/direccion/delete/:id", isAuthLogin(1), async (req, res)=>
 
 
 
-//TODO POST DELETE DIRECCION 
-
-routeAdmin.post("/areas/direccion/delete/:id", isAuthLogin(1), async (req,res)=>{
-     
-    const id= parseInt(req.params.id)
-    
-    const [idDirecciones]= await pool.query("select id_direccion from direcciones")
-
-    const [[idSearchValue]]= await pool.query("select id_direccion, direccion from direcciones where id_direccion= ?", [id])
-
-    const numbersId=idDirecciones.map(id => id.id_direccion)
-
-    if(!numbersId.includes(id)){
-        return res.redirect("/admin/areas")
-    }
-
-    const [deleteDireccion]= await pool.query("delete from direcciones where id_direccion= ?", [id])
-
-    if(deleteDireccion.affectedRows > 0){
-        
-        return res.status(200).json({
-             ok:true,
-             message: `Se han borrado todos los registros de ${idSearchValue.direccion}`,
-             redirect:"/admin/areas"
-        })
-
-    }else{
-        
-        return res.status(400).json({
-            ok:false,
-            message: `Hubo un error a la hora de eliminar los registros`,
-            redirect:"/admin/areas"
-        })
-    }
 
 
 
-})
-
-
-
-
-//TODO GET AREA DELETE
-
-routeAdmin.get("/areas/area/delete/:id", isAuthLogin(1), async (req, res)=>{
-    
-    const id= parseInt(req.params.id)
-
-    const [idAreas]= await pool.query("select id_area from areas")
-
-    const idNumbers= idAreas.map(a => a.id_area)
-
-    const [[totalAreasAffected]]= await pool.query("select count(*) as totalIdAreas, (select count(*) from equipos where area= ?) as totalAreasEquipos from areas where id_area= ?", [id,id])
-
-
-    if(!idNumbers.includes(id)){
-        return res.redirect("/admin/equipos")
-    
-    } 
-    
-    return res.status(200).json({
-        ok:true,
-        dataTotals: [
-            {label: "Total Areas: ", value:  totalAreasAffected.totalIdAreas},
-            {label: "Total Areas en Equipos: ", value: totalAreasAffected.totalAreasEquipos}
-        
-    ]
-    })
-
-})
-
-
-
-//TODO POST DELETE AREA
-routeAdmin.post("/areas/area/delete/:id", isAuthLogin(1), async (req,res)=>{
-     
-    const id= parseInt(req.params.id)
-    
-    const [idAreas]= await pool.query("select id_area from areas")
-
-    const [[idSearchValue]]= await pool.query("select id_area, area from areas where id_area= ?", [id])
-
-    const numbersId=idAreas.map(id => id.id_area)
-
-    if(!numbersId.includes(id)){
-        return res.redirect("/admin/areas")
-    }
-
-    const [deleteDireccion]= await pool.query("delete from areas where id_area= ?", [id])
-
-    if(deleteDireccion.affectedRows > 0){
-        
-        return res.status(200).json({
-             ok:true,
-             message: `Se han borrado todos los registros de ${idSearchValue.area}`,
-             redirect:"/admin/areas"
-        })
-
-    }else{
-        
-        return res.status(400).json({
-            ok:false,
-            message: `Hubo un error a la hora de eliminar los registros`,
-            redirect:"/admin/areas"
-        })
-    }
-
-
-
-})
 
 
 
@@ -1269,10 +1162,12 @@ routeAdmin.get("/equipos",isAuthLogin(1), async (req,res)=>{
     
     const invetarioSearch= req.query.inventario
     
-    const [consumibles]= await pool.query("select id_consumible, tipo_consumible, marca_consumible, consumible from consumibles")
-    const [areas]= await pool.query("select id_area, direccion, area from areas")
-    const [tipos]= await pool.query("select t.id_tipo_equipo, t.tipo_de_equipo, mo.modelo from tipo_equipos t inner join modelo_equipos mo on mo.id_modelo_equipo= t.modelo_equipo")
-    const [modelosSelected]= await pool.query("select id_modelo_equipo, modelo from modelo_equipos")
+    const [consumibles]= await pool.query("select id_consumible, tipo_consumible, marca_consumible, consumible from consumibles where estado= 'ACTIVO'")
+
+    const [areas]= await pool.query("select id_area, direccion, area from areas where estado= 'ACTIVO'")
+
+
+    //TODO 
     
     let equiposAll= []
      
@@ -1314,17 +1209,25 @@ routeAdmin.get("/equipos",isAuthLogin(1), async (req,res)=>{
     
     let marcasAll=[]
     
-    const [marcasQuery]=await pool.query("select id_marca_equipo, marca_equipo from marca_equipos")
-    
-    const [marcaSerachAll] = await pool.query("select id_marca_equipo, marca_equipo from marca_equipos where marca_equipo = ?", [marcaSearch])
-    
-    const [marcasOrder]= await pool.query("select id_marca_equipo, marca_equipo from marca_equipos order by marca_equipo desc")
-    
-    marcaSearch && marcaSearch.length > 0 ? marcasAll= marcaSerachAll : marcasAll = marcasQuery
-    
-    orderMarcas && orderMarcas.length > 0 ? marcasAll= marcasOrder : marcasAll= marcasQuery
+    const [marcasQuery]=await pool.query("select id_marca_equipo, marca_equipo, estado from marca_equipos")
     
     
+    
+    if(marcaSearch && marcaSearch.length > 0) {
+        
+        const [marcaSerachAll] = await pool.query("select id_marca_equipo, marca_equipo, estado from marca_equipos where marca_equipo = ?", [marcaSearch])
+        
+        marcasAll= marcaSerachAll
+    }else if(orderMarcas && orderMarcas.length  > 0) {
+        const [marcasOrder]= await pool.query("select id_marca_equipo, marca_equipo, estado from marca_equipos order by marca_equipo desc")
+        
+        marcasAll=  marcasOrder
+    
+    }else{
+        marcasAll= marcasQuery
+    }
+    
+    const [marcaEquiposActive]= await pool.query("select id_marca_equipo, marca_equipo from marca_equipos where estado= 'ACTIVE'")
 
 
 
@@ -1336,16 +1239,28 @@ routeAdmin.get("/equipos",isAuthLogin(1), async (req,res)=>{
     
     let modelosAll= []
     
-    const [modelosOrder]= await pool.query("select m.id_modelo_equipo, ma.marca_equipo, m.modelo from modelo_equipos m inner join marca_equipos ma on ma.id_marca_equipo= m.marca_equipo order by m.modelo desc")
-    
-    const [modeloSearchQuery] = await pool.query("select ma.marca_equipo, m.modelo from modelo_equipos m inner join marca_equipos ma on ma.id_marca_equipo= m.marca_equipo where m.modelo = ?", [modeloSearch])
-    
-    const [modelos]= await pool.query("select m.id_modelo_equipo, ma.marca_equipo, m.modelo from modelo_equipos m inner join marca_equipos ma on ma.id_marca_equipo= m.marca_equipo ")
+    const [modelos]= await pool.query("select m.id_modelo_equipo, ma.marca_equipo, m.modelo, m.estado from modelo_equipos m inner join marca_equipos ma on ma.id_marca_equipo= m.marca_equipo ")
     
     
-    modeloSearch &&  modeloSearch.length > 0 ? modelosAll=  modeloSearchQuery : modelosAll= modelos
+    const [modelosEquiposActive]= await pool.query("select id_modelo_equipo, modelo from modelo_equipos where estado= 'ACTIVO'")
     
-    orderModelo && orderModelo.length > 0 ? modelosAll= modelosOrder : modelosAll= modelos
+    
+    if(modeloSearch && modeloSearch.length > 0){
+        
+        const [modeloSearchQuery] = await pool.query("select ma.marca_equipo, m.modelo, m.estado from modelo_equipos m inner join marca_equipos ma on ma.id_marca_equipo= m.marca_equipo where m.modelo = ?", [modeloSearch])
+        
+        modelosAll= modeloSearchQuery
+        
+    }else if(orderModelo && orderModelo.length > 0){
+        
+        const [modelosOrder]= await pool.query("select m.id_modelo_equipo, ma.marca_equipo, m.modelo, m.estado from modelo_equipos m inner join marca_equipos ma on ma.id_marca_equipo= m.marca_equipo order by m.modelo desc")
+
+        modelosAll=  modelosOrder
+    }else{
+
+        modelosAll= modelos
+    }
+    
     
 
 
@@ -1358,28 +1273,31 @@ routeAdmin.get("/equipos",isAuthLogin(1), async (req,res)=>{
     
     const tipoOrder= req.query.orderTipoEquipos
     
-
-let tiposAll=[]
-
-
+    
+    let tiposAll=[]
+    
+    const [tiposEquiposActive]= await pool.query("select t.id_tipo_equipo,m.modelo from tipo_equipos t inner join modelo_equipos m on m.id_modelo_equipo= t.modelo_equipo where t.estado= 'ACTIVO'")
+    
+    const [tiposEquipos]= await pool.query("select t.id_tipo_equipo, t.tipo_de_equipo, m.modelo, group_concat(c.consumible separator ', ') as consumibles, t.estado from tipo_equipos t inner join modelo_equipos m on m.id_modelo_equipo= t.modelo_equipo inner join consumible_modelos cm on cm.id_tipo_equipo= t.id_tipo_equipo inner join consumibles c on c.id_consumible= cm.id_consumible group by t.id_tipo_equipo")
 
 if(tipoSearch && tipoSearch.length  > 0){
     
-    const [tipoSearchQuery]= await pool.query("select t.id_tipo_equipo, t.tipo_de_equipo, m.modelo, group_concat(c.consumible separator ', ') from tipo_equipos t inner join modelo_equipos m on m.id_modelo_equipo= t.modelo_equipo inner join consumible_modelos cm on cm.id_tipo_equipo= t.id_tipo_equipo inner join consumibles c on c.id_consumible= cm.id_consumible where t.tipo_de_equipo= ? group by t.id_tipo_equipo", [tipoSearch])
+    const [tipoSearchQuery]= await pool.query("select t.id_tipo_equipo, t.tipo_de_equipo, m.modelo,group_concat(c.consumible separator ', ') as consumibles, t.estado from tipo_equipos t inner join modelo_equipos m on m.id_modelo_equipo= t.modelo_equipo inner join consumible_modelos cm on cm.id_tipo_equipo= t.id_tipo_equipo inner join consumibles c on c.id_consumible= cm.id_consumible where m.modelo= ? group by t.id_tipo_equipo", [tipoSearch])
     
     tiposAll= tipoSearchQuery
     
-}else if (tipoOrder && tiposOrders.length  > 0){
+}else if (tipoOrder && tipoOrder.length  > 0){
     
     
-    const [tiposOrders]= await pool.query("select t.id_tipo_equipo, t.tipo_de_equipo, m.modelo, group_concat() from tipo_equipos t inner join modelo_equipos m on m.id_modelo_equipo= t.modelo_equipo inner join consumible_modelos cm on cm.id_tipo_equipo= t.id_tipo_equipo inner join consumibles c on c.id_consumible= cm.id_consumible group by t.id_tipo_equipo order by t.id_tipo_equipo desc")
+    const [tiposOrders]= await pool.query("select t.id_tipo_equipo, t.tipo_de_equipo, m.modelo, group_concat(c.consumible separator ', ') as consumibles, t.estado from tipo_equipos t inner join modelo_equipos m on m.id_modelo_equipo= t.modelo_equipo inner join consumible_modelos cm on cm.id_tipo_equipo= t.id_tipo_equipo inner join consumibles c on c.id_consumible= cm.id_consumible group by t.id_tipo_equipo order by t.id_tipo_equipo desc")
     
     tiposAll= tiposOrders
     
+
+
 }else{
     
     
-    const [tiposEquipos]= await pool.query("select t.id_tipo_equipo, t.tipo_de_equipo, m.modelo from tipo_equipos t inner join modelo_equipos m on m.id_modelo_equipo= t.modelo_equipo    group by t.id_tipo_equipo")
 
     tiposAll= tiposEquipos
 
@@ -1411,7 +1329,7 @@ res.render("admin/equipos.pug",{
             },{
                 class_icon:"fas fa-tint",
                 spanTitle:"Consumibles",
-                hrefNav:"/admin/consumibles",
+                    hrefNav:"/admin/consumibles",
             },
             {
                 class_icon:"fas fa-door-open",
@@ -1441,13 +1359,7 @@ res.render("admin/equipos.pug",{
                 type:"edit",
                 icon:"far fa-edit",
                 href:"/admin/equipos/equipo/edit/"
-            },{
-                type:"delete",
-                icon:"fas fa-trash-alt",
-                href:"/admin/equipos/equipo/delete/"
-            }
-                
-            ],
+            }],
             //? form equipos
              formShowAdd4:{
                 idForm: "formAddEquipo",
@@ -1458,7 +1370,7 @@ res.render("admin/equipos.pug",{
                     class__icon:"fas fa-pencil-alt",
                     name:"tipo_equipo",
                     defaultOption:"Seleccione un Tipo de Equipo",
-                    options:tipos.map(t => { return {
+                    options:tiposEquiposActive.map(t => { return {
                         value:t.id_tipo_equipo,
                         valueText: t.modelo
                     }})
@@ -1510,7 +1422,7 @@ res.render("admin/equipos.pug",{
             submit:"Buscar"
         },
         optionsDataSearch4:equiposAll.map(e=> e.inventario),
-        totals:[{
+        totals:[{   
             title:"CPU: ",
             value:totalCPU.totalCPU 
         },{title:"Impresoras: ",
@@ -1541,7 +1453,14 @@ res.render("admin/equipos.pug",{
                 idForm: "formAddMarca",
                 title:"AGREGAR MARCA",
                 valueSubmit:"Agregar Marca",
-                selected:[]
+                selected:[{
+                    id:"selectEstado",
+                    name:"estado",
+                    class__icon:"fas fa-shield-alt",
+                    defaultOption:"Selecciona un Estado",
+                    options:[{ value:"ACTIVO",valueText:"ACTIVO"},{value:"INACTIVO",valueText:"INACTIVO"}]
+                    
+             }]
             },formShowInputs:[{
                 id:"marcas",
                 classIcon:"fas fa-highlighter",
@@ -1557,7 +1476,7 @@ res.render("admin/equipos.pug",{
                 idField: "id_marca_equipo",
                 hrefRute:"/admin/equipos/marcas/edit",
                 hrefRuteDelete:"/admin/equipos/marcas/delete",
-                headTitles:["Marca de Equipo"],
+                headTitles:["Marca de Equipo", "Estado"],
                 optionsBtn: [{
                     Title:"Agregar",
                     contentText:"Agregar Marca",
@@ -1581,8 +1500,9 @@ res.render("admin/equipos.pug",{
             placeholderSearch:"Buscar por Marca...",
             submit:"Buscar"
         },
-        optionsDataSearch:marcasAll.map(e=> e.marca_equipo),    
+        optionsDataSearch:marcasQuery.map(e=> e.marca_equipo),    
         
+
 
         //?modelos de equipos
         formShowAdd2:{
@@ -1593,8 +1513,15 @@ res.render("admin/equipos.pug",{
                 class__icon:"fas fa-laptop",
                 name:"marca_equipo",
                 defaultOption:"Seleccione una Marca",
-                options: marcasAll.map(m => { return {value:m.id_marca_equipo, valueText: m.marca_equipo}})
-            }]  
+                options: marcaEquiposActive.map(m => { return {value:m.id_marca_equipo, valueText: m.marca_equipo}})
+            },{
+                    id:"selectEstado",
+                    name:"estado",
+                    class__icon:"fas fa-shield-alt",
+                    defaultOption:"Selecciona un Estado",
+                    options:[{ value:"ACTIVO",valueText:"ACTIVO"},{value:"INACTIVO",valueText:"INACTIVO"}]
+                    
+             }]  
         },
         formShowInputs2:[{
                 id:"madelo",
@@ -1610,7 +1537,7 @@ res.render("admin/equipos.pug",{
                 idField: "id_modelo_equipo",
                 hrefRute:"/admin/equipos/modelos/edit",
                 hrefRuteDelete:"/admin/equipos/modelos/delete",
-                headTitles:["Marca de Equipo", "Modelo de Equipo"], 
+                headTitles:["Marca de Equipo", "Modelo de Equipo", "Estado"], 
                 optionsBtn: [{
                     Title:"Agregar",
                     contentText:"Agregar Modelo",
@@ -1634,7 +1561,7 @@ res.render("admin/equipos.pug",{
             placeholderSearch:"Buscar por Madelo...",
             submit:"Buscar"
         },
-        optionsDataSearch2:modelosAll.map(e=> e.modelo),    
+        optionsDataSearch2:modelos.map(e=> e.modelo),    
         
         
 
@@ -1648,13 +1575,13 @@ res.render("admin/equipos.pug",{
                 class__icon:"fas fa-pencil-alt",
                 name:"modelo_equipo",
                 defaultOption:"Seleccione un Modelo",
-                options: modelosSelected.map(m => { return {value:m.id_modelo_equipo, valueText: m.modelo}})
+                options: modelosEquiposActive.map(m => { return {value:m.id_modelo_equipo, valueText: m.modelo}})
             }, { //?TIPOS DE EQUIPOS MANUAL SELECT
                 id:"SelectTipoEquipoAdd",
                 class__icon:"fas fa-mobile-alt",
                 name:"tipo_de_equipo",
                 defaultOption:"Seleccione un Tipo de Equipo",
-                options: tiposEquiposManual
+                options: tiposEquiposManual //? INICIO USERS
             },{ //?CONSUMIBLES TOM SELECT
                 id:"selectConsumiblesAdd",
                 class__icon:"fas fa-tint",
@@ -1662,7 +1589,14 @@ res.render("admin/equipos.pug",{
                 defaultOption:"Seleccione Consumibles",
                 multiple:true,
                 options: consumibles.map(m => { return {value:m.id_consumible, valueText: m.consumible}})
-            }],
+            },{
+                    id:"selectEstado",
+                    name:"estado",
+                    class__icon:"fas fa-shield-alt",
+                    defaultOption:"Selecciona un Estado",
+                    options:[{ value:"ACTIVO",valueText:"ACTIVO"},{value:"INACTIVO",valueText:"INACTIVO"}]
+                    
+             }],
         },
         formShowInputs3:[], 
          classTarget3:"tipoFormShow", 
@@ -1672,7 +1606,7 @@ res.render("admin/equipos.pug",{
                 idField: "id_tipo_equipo",
                 hrefRute:"/admin/equipos/tipos/edit",
                 hrefRuteDelete:"/admin/equipos/tipos/delete",
-                headTitles:["Tipo de Equipo", "Modelo de Equipo", "Consumibles"],
+                headTitles:["Tipo de Equipo", "Modelo de Equipo", "Consumibles", "Estado"],
                 optionsBtn: [{
                     Title:"Agregar",
                     contentText:"Agregar Tipo",
@@ -1696,7 +1630,7 @@ res.render("admin/equipos.pug",{
             placeholderSearch:"Buscar por Tipo de Equipo...",
             submit:"Buscar"
         },
-        optionsDataSearch3:tiposAll.map(e=> e.modelo),    
+        optionsDataSearch3:tiposEquipos.map(e=> e.modelo),    
 
 
 
@@ -1763,6 +1697,30 @@ routeAdmin.post("/equipos/equipo",isAuthLogin(1),bodyValidateEquipos, validateEx
     
     const parseArea= parseInt(area)
 
+
+    //?validate data body
+
+    const [[tipoEquipoFind]]= await pool.query("select id_tipo_equipo from tipo_equipos where id_tipo_equipo= ?", [parseTipo])
+
+    const [[areaFind]]= await pool.query("select id_area from areas where id_area= ?", [parseArea])
+
+    if(!tipoEquipoFind){
+        return res.status(400).json({
+            ok:false,
+            message:"El tipo de equipo no existe",
+            redirect: "/admin/equipos"
+        })
+    }
+
+    if(!areaFind){
+        return res.status(400).json({
+            ok:false,
+            message:"El área no existe",
+            redirect: "/admin/equipos"
+        })
+    }
+
+    //?construct new equipo object
     const NewEquipo={
         tipo_equipo: parseTipo,
         serie,
@@ -1782,19 +1740,29 @@ routeAdmin.post("/equipos/equipo",isAuthLogin(1),bodyValidateEquipos, validateEx
     try {
         await connection.beginTransaction()
 
+        //?EQUIPO SEARCH VALIDATE
         const [equipoSearch] = await connection.query("SELECT id_equipo FROM equipos WHERE serie = ? OR inventario = ?",[serie, inventario])
 
-        if (equipoSearch.length > 0) {
-            await connection.rollback()
-
-            return res.status(400).json({
-                ok:false,
-                message:`Ya existe el equipo ${inventario}`,
-                redirect:"/admin/equipos"
-            })
-        }
+        if (equipoSearch.length > 0) { throw new Error(`El equipo con serie ${serie} o inventario ${inventario} ya existe`)}
 
 
+        //? EQUIPO MODELO CONSUMIBLES SEARCH
+
+        const [[consumiblesModeloEquipo]]= await connection.query("select t.id_tipo_equipo, m.modelo, group_concat(c.id_consumible separator ',') as consumibles from tipo_equipos t inner join consumible_modelos cm on cm.id_tipo_equipo= t.id_tipo_equipo inner join consumibles c on c.id_consumible= cm.id_consumible inner join modelo_equipos m on m.id_modelo_equipo= t.modelo_equipo where t.id_tipo_equipo= ? group by t.id_tipo_equipo", [parseTipo])
+
+        const validateConsumibles= await validateConsumiblesActive(consumiblesModeloEquipo.consumibles.split(",").map(c => Number(c)), connection)
+
+        if(validateConsumibles.ok === false){ throw new Error(`El modelo seleccionado ${consumiblesModeloEquipo.modelo} contiene consumibles inactivos)`)}
+
+        //?VALIDATE TIPO, AREAS AND MORE
+
+        const validateTipoEquipo= await validateTipoEquipoActive({connection, tipo_equipo: parseTipo, area: parseArea, validateComplete: false})
+
+
+        if(validateTipoEquipo.ok === false){ throw new Error(validateTipoEquipo.message)}
+
+
+        //?ADD EQUIPO
         const [addEquipo] = await connection.query("INSERT INTO equipos SET ?",[NewEquipo])
 
 
@@ -1807,16 +1775,19 @@ routeAdmin.post("/equipos/equipo",isAuthLogin(1),bodyValidateEquipos, validateEx
                 message: `Se ha guardado el equipo ${inventario}`,
                 redirect:"/admin/equipos"
             })
+        }else{
+            
+            throw new Error(`Hubo un error al guardar el equipo ${inventario}`)
         }
 
 
     } catch (err) {
+
         await connection.rollback()
         
-
         return res.status(500).json({
             ok:false,
-            message:`Error ${err.message}`,
+            message:`${err.message}`,
             redirect:"/admin/equipos"
         })
 
@@ -1837,7 +1808,7 @@ routeAdmin.post("/equipos/equipo",isAuthLogin(1),bodyValidateEquipos, validateEx
 
 routeAdmin.post("/marcas/equipo", isAuthLogin(1),bodyValidateMarcasEquipos,validateExpressErrors("/admin/equipos"), async(req,res)=>{
 
-    const {marca_equipo}= req.body
+    const {marca_equipo, estado}= req.body
 
     
     const [marcaFind]= await pool.query("select marca_equipo from marca_equipos where marca_equipo= ?",[marca_equipo])
@@ -1852,7 +1823,7 @@ routeAdmin.post("/marcas/equipo", isAuthLogin(1),bodyValidateMarcasEquipos,valid
     }
 
 
-    const [marcaAdd]= await pool.query("insert into marca_equipos set ? ", [{marca_equipo}])
+    const [marcaAdd]= await pool.query("insert into marca_equipos set ? ", [{marca_equipo, estado}])
     
 
     if(marcaAdd.affectedRows > 0 ){
@@ -1879,7 +1850,7 @@ routeAdmin.post("/marcas/equipo", isAuthLogin(1),bodyValidateMarcasEquipos,valid
 
 routeAdmin.post("/marcas/modelo", isAuthLogin(1),bodyValidateModelosEquipos,validateExpressErrors("/admin/equipos"), async (req, res) => {
     
-    const {marca_equipo, modelo}= req.body
+    const {marca_equipo, modelo, estado}= req.body
 
     const marca= parseInt(marca_equipo)
 
@@ -1895,7 +1866,23 @@ routeAdmin.post("/marcas/modelo", isAuthLogin(1),bodyValidateModelosEquipos,vali
     }
 
 
-    const [modeloAdd] = await pool.query("insert into modelo_equipos set ?",[{marca_equipo: marca, modelo}])
+    //? marca validate active
+
+    const [[marcaActive]]= await pool.query("select marca_equipo, estado from marca_equipos where id_marca_equipo= ?", [marca_equipo])
+
+    console.log(marcaActive)
+
+    if(marcaActive.estado=== "INACTIVO"){
+
+        return res.status(400).json({
+             ok:false,
+             message:`No puedes crear un modelo de la marca ${marcaActive.marca_equipo} por que esta inactiva`,
+             redirect:"/admin/equipos"
+        })
+    }
+
+
+    const [modeloAdd] = await pool.query("insert into modelo_equipos set ?",[{marca_equipo: marca, modelo, estado}])
     
     if (modeloAdd.affectedRows > 0) {
         return res.status(200).json({
@@ -1922,19 +1909,15 @@ routeAdmin.post("/marcas/modelo", isAuthLogin(1),bodyValidateModelosEquipos,vali
 
 routeAdmin.post("/marcas/tipo", isAuthLogin(1),bodyValidateTiposEquipos,validateExpressErrors("/admin/equipos"), async (req,res)=>{
     
-    const {tipo_de_equipo, modelo_equipo, consumibles }= req.body
+    const {tipo_de_equipo, modelo_equipo, consumibles, estado }= req.body
 
     const modelo= parseInt(modelo_equipo)
-
-    const tipo=tipo_de_equipo.toUpperCase()
 
     const [tipoFind]= await pool.query("select modelo_equipo, tipo_de_equipo from tipo_equipos where modelo_equipo= ?",[modelo])
     
     const consumibleValidateArray=  Array.isArray(consumibles) ? consumibles : [consumibles]
 
     const consumiblesIdParse= consumibleValidateArray.map(Number)
-
-    console.log(consumiblesIdParse)
 
 
     if(tipoFind.length > 0){
@@ -1950,28 +1933,45 @@ routeAdmin.post("/marcas/tipo", isAuthLogin(1),bodyValidateTiposEquipos,validate
     try {
     
     await connection.beginTransaction()
+    
+    //TODO VALIDATE ACTIVE
+    
+    const [[modeloValidate]]= await connection.query("select id_modelo_equipo, modelo, estado, marca_equipo from modelo_equipos where id_modelo_equipo=? for UPDATE", [modelo])
 
-    const [tipoAdd]= await connection.query("insert into tipo_equipos SET ?",[{tipo_de_equipo:tipo, modelo_equipo:modelo}])
+    const [[marcaValidate]]= await connection.query("select id_marca_equipo, marca_equipo, estado from marca_equipos where id_marca_equipo= ? for UPDATE", [parseInt(modeloValidate.marca_equipo)])
 
-    if(tipoAdd.affectedRows === 0){
+    const consumibleValidate = await validateConsumiblesActive(consumiblesIdParse,connection)
+
+
+    if(consumibleValidate.ok=== false){
         
-        await connection.rollback()
- 
-        throw new Error(`Error al agregar el tipo ${tipo_de_equipo}`) 
+        throw new Error(consumibleValidate.message)
     }
+
+    if(modeloValidate.estado=== "INACTIVO"){ 
+
+        throw new Error(`No se puede agregar, el modelo ${modeloValidate.modelo} esta inactivo`)
+    }
+
+    if(marcaValidate.estado === 'INACTIVO'){
+
+        throw new Error(`No se puede agregar, la marca ${marcaValidate.marca_equipo} esta inactiva`)
+    }
+
+
+    //* INSERT TIPO
+    const [tipoAdd]= await connection.query("insert into tipo_equipos SET ?",[{tipo_de_equipo, modelo_equipo:modelo, estado}])
+
+    if(tipoAdd.affectedRows === 0){throw new Error(`Error al agregar el tipo ${tipo_de_equipo}`)}
 
     //*ID TIPO INSERT AND CONSUMIBLES ADD
 
     const idTipoInsert= tipoAdd.insertId
 
-    const [consumiblesValidate]= await connection.query("select id_consumible from consumibles where id_consumible in(?)", [consumiblesIdParse])
+    const [consumiblesValidate]= await connection.query("select id_consumible from consumibles where id_consumible in(?) for UPDATE", [consumiblesIdParse])
 
-    if(consumibleValidateArray.length !== consumibles.length){
+    if(consumiblesValidate.length !== consumiblesIdParse.length){throw new Error("Consumibles no validos")}
 
-        await connection.rollback()
-
-        throw new Error("Consumibles no validos")
-    }
 
     const consumiblesParseAdd= consumiblesIdParse.map(c => (([parseInt(idTipoInsert), c])))
 
@@ -2032,11 +2032,9 @@ const id=parseInt(req.params.id)
 
 const [idEquipos]= await pool.query("select id_equipo from equipos")
 
-const [tiposEquipos]= await pool.query("select e.id_tipo_equipo, e.tipo_de_equipo, m.modelo from tipo_equipos e inner join modelo_equipos m on m.id_modelo_equipo= e.modelo_equipo")
+const [tiposEquipos]= await pool.query("select e.id_tipo_equipo, e.tipo_de_equipo, m.modelo from tipo_equipos e inner join modelo_equipos m on m.id_modelo_equipo= e.modelo_equipo where e.estado= 'ACTIVO'")
 
-const [areas]= await pool.query("select id_area, direccion, area from areas")
-
-const [consumibles]= await pool.query("select id_consumible, tipo_consumible, marca_consumible, consumible from consumibles")
+const [areas]= await pool.query("select id_area, direccion, area from areas where estado= 'ACTIVO'")
 
 
 const idEquiposNumbers= idEquipos.map(id => id.id_equipo)
@@ -2134,7 +2132,7 @@ res.render("Edits/edits.pug",{
                         value:a.id_area,
                         text:a.area
                 }})
-                },  
+                }, 
                 
             ]
 
@@ -2159,7 +2157,7 @@ routeAdmin.get("/equipos/marcas/edit/:id",isAuthLogin(1),async (req,res)=>{
     
 const id=parseInt(req.params.id)
 
-const [idModelos]= await pool.query("select id_marca_equipo from marca_equipos")
+const [idModelos]= await pool.query("select id_marca_equipo, estado from marca_equipos")
 
 const idMarcasNumbers= idModelos.map(id => id.id_marca_equipo)
 
@@ -2167,7 +2165,7 @@ if (!idMarcasNumbers.includes(id)){
     res.redirect("/admin/equipos")
 }
 
-const [marcaSearch]= await pool.query("select id_marca_equipo, marca_equipo from marca_equipos where id_marca_equipo= ?",[id])
+const [marcaSearch]= await pool.query("select id_marca_equipo, marca_equipo, estado from marca_equipos where id_marca_equipo= ?",[id])
 
 res.render("Edits/edits.pug",{
         titles:"EQUIPOS",
@@ -2215,7 +2213,15 @@ res.render("Edits/edits.pug",{
                     id:"marcaEdit",
                     labelTitle:"Marca:",
                     value:marcaSearch[0].marca_equipo
-                },
+                },{
+                    type:"select",
+                    placeholder:"Escribe el estado del usuario...",
+                    name:"estado",
+                    id:"estadoEdit",
+                    labelTitle:"Estado:",
+                    value:marcaSearch[0].estado,
+                    options:[{value:"ACTIVO", valueText:"Activo"},{value:"INACTIVO", valueText:"Inactivo"}]
+                }
                 
             ]
 
@@ -2237,7 +2243,7 @@ routeAdmin.get("/equipos/modelos/edit/:id",isAuthLogin(1), async (req,res)=>{
 
 const id=parseInt(req.params.id)
 
-const [idModelosId]= await pool.query("select id_modelo_equipo from modelo_equipos")
+const [idModelosId]= await pool.query("select id_modelo_equipo, estado from modelo_equipos")
 
 const idModelosNumbers= idModelosId.map(id => id.id_modelo_equipo)
 
@@ -2247,7 +2253,7 @@ if (!idModelosNumbers.includes(id)){
     res.redirect("/admin/equipos")
 }
 
-const [modeloSearch]= await pool.query("select m.id_modelo_equipo, ma.marca_equipo, m.modelo from modelo_equipos m inner join marca_equipos ma on ma.id_marca_equipo=m.marca_equipo where id_modelo_equipo= ?",[id])
+const [modeloSearch]= await pool.query("select m.id_modelo_equipo, ma.marca_equipo, m.modelo, m.estado from modelo_equipos m inner join marca_equipos ma on ma.id_marca_equipo=m.marca_equipo where id_modelo_equipo= ?",[id])
 
 
 res.render("Edits/edits.pug",{
@@ -2304,7 +2310,15 @@ res.render("Edits/edits.pug",{
                         value:m.id_marca_equipo,
                         text:m.marca_equipo
                 }})
-                },
+                },{
+                    type:"select",
+                    placeholder:"Escribe el estado del usuario...",
+                    name:"estado",
+                    id:"estadoEdit",
+                    labelTitle:"Estado:",
+                    value:modeloSearch[0].estado,
+                    options:[{value:"ACTIVO", valueText:"Activo"},{value:"INACTIVO", valueText:"Inactivo"}]
+                }
                 
             ]
 
@@ -2326,11 +2340,11 @@ routeAdmin.get("/equipos/tipos/edit/:id", isAuthLogin(1), async (req,res)=>{
       
     const id=parseInt(req.params.id)
 
-const [idTipoId]= await pool.query("select id_tipo_equipo from tipo_equipos")
+const [idTipoId]= await pool.query("select id_tipo_equipo, estado from tipo_equipos")
 
 const idTiposNumbers= idTipoId.map(id => id.id_tipo_equipo)
 
-const [modelos]= await pool.query("select id_modelo_equipo, modelo from modelo_equipos ")
+const [modelos]= await pool.query("select id_modelo_equipo, modelo from modelo_equipos")
 
 const [consumuibles]= await pool.query("select id_consumible, consumible from consumibles")
 
@@ -2338,7 +2352,7 @@ if (!idTiposNumbers.includes(id)){
     res.redirect("/admin/equipos")
 }
 
-const [tipoSearch]= await pool.query("select t.id_tipo_equipo, t.tipo_de_equipo, m.modelo, group_concat(c.id_consumible) as idConsumibles from tipo_equipos t inner join modelo_equipos m on m.id_modelo_equipo=t.modelo_equipo inner join consumible_modelos cm on cm.id_tipo_equipo = t.id_tipo_equipo inner join consumibles c on c.id_consumible = cm.id_consumible where t.id_tipo_equipo= ? group by t.id_tipo_equipo ",[id])
+const [tipoSearch]= await pool.query("select t.id_tipo_equipo, t.tipo_de_equipo, m.modelo,t.estado, group_concat(c.id_consumible) as idConsumibles from tipo_equipos t inner join modelo_equipos m on m.id_modelo_equipo=t.modelo_equipo inner join consumible_modelos cm on cm.id_tipo_equipo = t.id_tipo_equipo inner join consumibles c on c.id_consumible = cm.id_consumible where t.id_tipo_equipo= ? group by t.id_tipo_equipo ",[id])
 
 const tipoIdSeachConsumibles= tipoSearch[0].idConsumibles.split(",").map(Number) 
 
@@ -2418,6 +2432,14 @@ res.render("Edits/edits.pug",{
                     value:[], //? array change multiple options
                     multiple:true,
                     options: optsTipoSearch
+                },{
+                    type:"select",
+                    placeholder:"Escribe el estado del usuario...",
+                    name:"estado",
+                    id:"estadoEdit",
+                    labelTitle:"Estado:",
+                    value:tipoSearch[0].estado,
+                    options:[{value:"ACTIVO", valueText:"Activo"},{value:"INACTIVO", valueText:"Inactivo"}]
                 }
                 
             ]
@@ -2463,7 +2485,7 @@ const idEquiposNumbers= idEquiposAll.map(e=> e.id_equipo)
 const [equipoFind]= await pool.query("select id_equipo, inventario from equipos where inventario= ? and id_equipo!= ?", [inventario, idEquipo])
 
 if(!idEquiposNumbers.includes(idEquipo)){
-    
+      
    return res.status(400).json({
         ok:false,
         message:"El equipo que intenta editar, no existe",
@@ -2481,29 +2503,85 @@ if(equipoFind.length > 0){
     })
 }
 
-const [equipoUpdate]= await pool.query("update equipos set ? where id_equipo=?",[newEquipo,idEquipo])
-
-if (equipoUpdate.affectedRows > 0){
-    
-    return res.status(200).json({
-        ok:true,
-        message:`Se edito correctamente el equipo ${inventario}`,
-        redirect:"/admin/equipos"
-    })
-
-}else{
-    
-    return res.status(400).json({
-        ok:false,
-        message: `Error al editar el equipo ${inventario}`,
-        redirect:"/admin/equipos"
-    })
 
 
-}
+//? TRANSACTION
+
+
+const connection= await pool.getConnection()
+
+try{
+
+
+    await connection.beginTransaction()
+
+
+    //?VALIDATE AREA AND  TIPO EQUIPO
+
+    const [areas]= await connection.query("select id_area from areas where id_area= ? for UPDATE", [parseInt(area)])
+
+    const [tipos]= await connection.query("select id_tipo_equipo from tipo_equipos where id_tipo_equipo= ? for UPDATE", [parseInt(tipo_equipo)])
+
+    if(areas.length === 0){ throw new Error("El area no existe")}
+
+    if(tipos.length === 0){ throw new Error("El tipo de equipo no existe")}
+
+
+    //?VALIDATE CONSUMIBLES ACTIVE
+
+
+    const [[consumiblesModeloEquipo]]= await connection.query("select t.id_tipo_equipo, m.modelo, group_concat(c.id_consumible separator ',') as consumibles from tipo_equipos t inner join consumible_modelos cm on cm.id_tipo_equipo= t.id_tipo_equipo inner join consumibles c on c.id_consumible= cm.id_consumible inner join modelo_equipos m on m.id_modelo_equipo= t.modelo_equipo where t.id_tipo_equipo= ? group by t.id_tipo_equipo", [parseInt(tipo_equipo)])
+
+    const validateConsumibles= await validateConsumiblesActive(consumiblesModeloEquipo.consumibles.split(",").map(e => Number(e)), connection)
+
+    if(validateConsumibles.ok === false){ throw new Error(validateConsumibles.message)}
+
+    //? VALIDATE TIPO EQUIPO ACTIVE
+
+    const validateTipoEquipo= await validateTipoEquipoActive({connection, tipo_equipo: parseInt(tipo_equipo), area: parseInt(area), validateComplete: false})
+
+    if(validateTipoEquipo.ok === false){ throw new Error(validateTipoEquipo.message)}
+
+    //?UPDATE EQUIPO
+
+   const [equipoUpdate]= await connection.query("update equipos set ? where id_equipo=?",[newEquipo,idEquipo])
+
+   if(equipoUpdate.affectedRows === 0){ throw new Error(`Error al actualizar el equipo ${inventario}`)}
+
+    if (equipoUpdate.affectedRows > 0){
+        
+        await connection.commit()
+        
+        return res.status(200).json({
+            ok:true,
+            message:`Se edito correctamente el equipo ${inventario}`,
+            redirect:"/admin/equipos"
+        })
+    }
+
+
+
+}catch(err){
+
+await connection.rollback()
+
+return res.status(400).json({
+    ok:false,
+    message: err.message,
+    redirect:"/admin/equipos"
 
 
 })
+
+}finally{
+
+    connection.release()
+}
+
+})
+
+
+
 
 
 
@@ -2514,13 +2592,13 @@ routeAdmin.post("/equipos/marcas/edit/:id",isAuthLogin(1), bodyValidateMarcasEqu
      
 const idMarca=parseInt(req.params.id)
 
-const {marca_equipo}= req.body
+const {marca_equipo, estado}= req.body
 
 const [idMarcasAll]=await pool.query("select id_marca_equipo from marca_equipos")
 
 const idMarcasNumbers= idMarcasAll.map(m=> m.id_marca_equipo)
 
-const [marcaFind]= await pool.query("select id_marca_equipo,marca_equipo from marca_equipos where marca_equipo= ?", [marca_equipo])
+const [marcaFind]= await pool.query("select id_marca_equipo,marca_equipo from marca_equipos where marca_equipo= ? and id_marca_equipo!= ?", [marca_equipo, idMarca])
 
 if(!idMarcasNumbers.includes(idMarca)){
     
@@ -2541,7 +2619,7 @@ if(marcaFind.length > 0){
     })
 }
 
-const [marcaUpdate]= await pool.query("update marca_equipos set marca_equipo= ? where id_marca_equipo=?",[marca_equipo,idMarca])
+const [marcaUpdate]= await pool.query("update marca_equipos set marca_equipo= ?, estado= ? where id_marca_equipo=?",[marca_equipo, estado, idMarca])
 
 if (marcaUpdate.affectedRows > 0){
     
@@ -2575,13 +2653,30 @@ routeAdmin.post("/equipos/modelos/edit/:id", isAuthLogin(1),bodyValidateModelosE
 
 const idEquipo=parseInt(req.params.id)
 
-const {modelo, marca_equipo}= req.body
+const {modelo, marca_equipo, estado}= req.body
 
 const [idModelosAll]=await pool.query("select id_modelo_equipo from modelo_equipos")
 
 const idModelosNumbers= idModelosAll.map(m=> m.id_modelo_equipo)
 
 const [modeloFind]= await pool.query("select id_modelo_equipo from modelo_equipos where modelo= ? and id_modelo_equipo != ?", [modelo,idEquipo])
+
+//?validate marca active
+  const [[marcaValidate]]= await pool.query("select id_marca_equipo, marca_equipo, estado from marca_equipos where id_marca_equipo= ?", [marca_equipo])
+ 
+
+if(marcaValidate.estado === "INACTIVO"){
+
+    return res.status(400).json({
+        ok:false,
+        message:`No se puede actualizar, la marcar ${marcaValidate.marca_equipo} esta inactiva`,
+        redirect:"/admin/equipos"
+    })
+
+}
+
+
+
 
 if(!idModelosNumbers.includes(idEquipo)){
     
@@ -2602,7 +2697,7 @@ if(modeloFind.length > 0){
     })
 }
 
-const [modeloUpdate]= await pool.query("update modelo_equipos set modelo= ?, marca_equipo=? where id_modelo_equipo=?",[modelo, marca_equipo, idEquipo])
+const [modeloUpdate]= await pool.query("update modelo_equipos set modelo= ?, marca_equipo=?, estado=? where id_modelo_equipo=?",[modelo, marca_equipo, estado, idEquipo])
 
 if (modeloUpdate.affectedRows > 0){
     
@@ -2641,7 +2736,7 @@ routeAdmin.post("/equipos/tipos/edit/:id", isAuthLogin(1), bodyValidateTiposEqui
      
 const idTipo=parseInt(req.params.id)
 
-const {tipo_de_equipo, modelo_equipo}= req.body
+const {tipo_de_equipo, modelo_equipo, estado}= req.body
 
 const [idTiposAll]=await pool.query("select id_tipo_equipo from tipo_equipos")
 
@@ -2651,76 +2746,77 @@ const [tipoFind]= await pool.query("select id_tipo_equipo from tipo_equipos wher
 
 const consumibles = Array.isArray(req.body["consumibles"]) ? req.body["consumibles"] : [req.body["consumibles"]]
 
+const consumiblesParseId= consumibles.map(Number)
+
+//? VALIDATE ESTADOS
+
+const [[modeloValidate]]= await pool.query("select id_modelo_equipo, marca_equipo, modelo, estado from modelo_equipos where id_modelo_equipo= ?", [parseInt(modelo_equipo)])
+
+const [[marcaValidate]]= await pool.query("select id_marca_equipo, marca_equipo, estado from marca_equipos where id_marca_equipo= ? ", [parseInt(modeloValidate.marca_equipo)])
+
+if(modeloValidate.estado=== "INACTIVO"){
+
+    return res.status(400).json({
+        ok:false,
+        message:`No se puede actualizar, el modelo ${modeloValidate.modelo} esta inactivo`,
+        redirect:"/admin/equipos"
+    })
+}
+
+if(marcaValidate.estado=== "INACTIVO"){
+
+    return res.status(400).json({
+        ok:false,
+        message:`No se puede actualizar, la marca ${marcaValidate.marca_equipo} esta inactiva`,
+        redirect:"/admin/equipos"
+    })
+}
+
+
+//?TRANSACTION UPDATE TIPOS DE EQUIPOS AND CONSUMIBLES
 
 const connection= await pool.getConnection()
 
 try {
-
     await connection.beginTransaction()
+
+    //?CONSUMIBLES VALIDATE ACTIVE
     
-if(!idTiposNumbers.includes(idTipo)){
+    const consumiblesValidatEstado= await validateConsumiblesActive(consumiblesParseId,pool)
     
-    await connection.rollback()
-
-   return res.status(400).json({
-        ok:false,
-        message:"El Tipo de equipo que intenta editar, no existe",
-        redirect:"/admin/equipos"
-    })
-}
-
-
-if(tipoFind.length > 0){
+    if(consumiblesValidatEstado.ok=== false){ throw new Error(consumiblesValidatEstado.message)}
     
-    await connection.rollback()
+    
+    //? EDIT EXIST ID
+    if(!idTiposNumbers.includes(idTipo)){ throw new Error("El tipo de equipo que intenta editar, no existe")}
+    
+    //?DUPLICATE VALUE ID EXIST
+    if(tipoFind.length > 0){throw new Error(`El modelo ${modelo_equipo} ya existe para actualizar`)}
+    
+    //? INSERT UPDATE TIPO DE EQUIPO
+    
+    const [tipoUpdate]= await connection.query("update tipo_equipos set tipo_de_equipo= ?, modelo_equipo=?, estado=? where id_tipo_equipo=?",[tipo_de_equipo, modelo_equipo, estado, idTipo])
+    
+    if(tipoUpdate.affectedRows === 0){ throw new Error(`Error al editar el tipo de equipo ${tipo_de_equipo}`)}
+    
+    
 
-    return res.status(400).json({
-         ok:false,
-         message:`El  modelo del equipo ya existe para actualizar`,
-         redirect:"/admin/equipos"
-    })
-}
+//? CONSUMIBLES VALIDATE EXIST
 
-const [tipoUpdate]= await connection.query("update tipo_equipos set tipo_de_equipo= ?, modelo_equipo=? where id_tipo_equipo=?",[tipo_de_equipo, modelo_equipo, idTipo])
-
-if(tipoUpdate.affectedRows === 0){
-
-    await connection.rollback()
-
-    return res.status(400).json({
-        ok:false,
-        message: `El modelo no se pudo actualizar`,
-        redirect:"/admin/equipos"
-    })
-}
-
-
-const consumiblesParseId= consumibles.map(Number)
-
-console.log(consumiblesParseId)
 
 const [consumiblesValidate]= await connection.query("select id_consumible from consumibles where id_consumible in (?)", [consumiblesParseId])
 
+if(consumiblesValidate.length !== consumiblesParseId.length){ throw new Error("Consumibles no validos")}
 
 
-if(consumiblesValidate.length !== consumiblesParseId.length){
-    
-    await connection.rollback()
-
-    return res.status(400).json({
-        ok:false,
-        message: "Hay consumibles no validos",
-        redirect:"/admin/equipos"  
-    })
-}
-
-
+//? CONSUMIBLES UPDATE PIVOTE AND DELETE OLD DATA
 const consumilesParse= consumibles.map(c => [parseInt(idTipo), c])
 
 const [deleteConsumibles]= await connection.query("delete from consumible_modelos where id_tipo_equipo= ?", [idTipo])
 
-const [updateConsumibles]= await connection.query("insert into consumible_modelos(id_tipo_equipo,id_consumible) values ?", [consumilesParse])
+if(deleteConsumibles.affectedRows === 0){ throw new Error(`Error al eliminar los consumibles anteriores del tipo de equipo ${tipo_de_equipo}`)}
 
+const [updateConsumibles]= await connection.query("insert into consumible_modelos(id_tipo_equipo,id_consumible) values ?", [consumilesParse])
 
 if (updateConsumibles.affectedRows > 0){
     
@@ -2734,14 +2830,8 @@ if (updateConsumibles.affectedRows > 0){
 
 
 }else{
-    
-    return res.status(400).json({
-        ok:false,
-        message: `Error al editar el tipo de equipo ${tipo_de_equipo}`,
-        redirect:"/admin/equipos"
-    })
 
-
+    throw new Error(`Error al actualizar los consumibles del tipo de equipo ${tipo_de_equipo}`)
 }
 
 } catch (error) {
@@ -2752,14 +2842,14 @@ if (updateConsumibles.affectedRows > 0){
 
     return res.status(400).json({
         ok:false,
-        message:`Error en servidor: ${error}`,
+        message:`${error}`,
         redirect:"/admin/equipos"
     })
 
    
 }finally{
 
-await connection.release()
+ connection.release()
 
 }
 
@@ -2776,257 +2866,11 @@ await connection.release()
 
 
 
-//TODO GET DELETE EQUIPOS
 
 
-routeAdmin.get("/equipos/equipos/delete/:id", isAuthLogin(1), async (req,res, next)=>{
 
 
 
-const id= parseInt(req.params.id)
-
-
-const [idEquipos]= await pool.query("select id_equipo from equipos")
-
-
-})
-
-
-
-//TODO DELETE GET TIPOS DE EQUIPOS
-routeAdmin.get("/equipos/tipos/delete/:id", isAuthLogin(1), async (req, res)=>{
-    
-    const id= parseInt(req.params.id)
-
-    const [idTipos]= await pool.query("select id_tipo_equipo from tipo_equipos")
-
-    const idNumbers= idTipos.map(tipo => tipo.id_tipo_equipo)
-
-    const [[totalTiposAffected]]= await pool.query("select count(*) as totalIdTipos, (select count(*) from equipos where tipo_equipo= ?) as totalTiposEquipos from tipo_equipos where id_tipo_equipo= ?", [id,id])
-
-
-    if(!idNumbers.includes(id)){
-        return res.redirect("/admin/equipos")
-    
-    } 
-    
-    return res.status(200).json({
-        ok:true,
-        dataTotals: [
-            {label: "Total tipo de Equipos: ", value:  totalTiposAffected.totalIdTipos},
-            {label: "Total Equipos: ", value: totalTiposAffected.totalTiposEquipos}
-        
-    ]
-    })
-
-
-
-})
-
-
-
-//TODO POST DELETE TIPOS DE EQUIPOS
-
-routeAdmin.post("/equipos/tipos/delete/:id", isAuthLogin(1), async (req,res)=>{
-     
-    const id= parseInt(req.params.id)
-    
-    const [idTiposEquipos]= await pool.query("select id_tipo_equipo from tipo_equipos")
-
-    const [[idSearchValue]]= await pool.query("select id_tipo_equipo, tipo_de_equipo from tipo_equipos where id_tipo_equipo= ?", [id])
-
-    const numbersId=idTiposEquipos.map(id => id.id_tipo_equipo)
-
-    if(!numbersId.includes(id)){
-        return res.redirect("/admin/equipos")
-    }
-
-    const [deleteDireccion]= await pool.query("delete from tipo_equipos where id_tipo_equipo= ?", [id])
-
-    if(deleteDireccion.affectedRows > 0){
-        
-        return res.status(200).json({
-             ok:true,
-             message: `Se han borrado todos los registros de ${idSearchValue.tipo_de_equipo}`,
-             redirect:"/admin/equipos"
-        })
-
-    }else{
-        
-        return res.status(400).json({
-            ok:false,
-            message: `Hubo un error a la hora de eliminar los registros`,
-            redirect:"/admin/equipos"
-        })
-    }
-
-
-
-})
-
-
-
-
-
-
-
-
-//TODO DELETE GET MODELOS DE EQUIPOS
-routeAdmin.get("/equipos/modelos/delete/:id", isAuthLogin(1), async (req, res)=>{
-    
-    const id= parseInt(req.params.id)
-
-    const [idModelos]= await pool.query("select id_modelo_equipo from modelo_equipos")
-
-    const idNumbers= idModelos.map(m => m.id_modelo_equipo)
-
-    const [[totalModelosAffected]]= await pool.query("select count(*) as totalIdModelos, (select count(*) from tipo_equipos where modelo_equipo= ?) as totalModelosTipos, (select count(*) from equipos e inner join tipo_equipos ti on ti.id_tipo_equipo=e.tipo_equipo where ti.modelo_equipo= ? ) as totalModeloEquipos from modelo_equipos where id_modelo_equipo= ?", [id,id, id])
-
-
-    if(!idNumbers.includes(id)){
-        return res.redirect("/admin/equipos")
-    
-    } 
-    
-    return res.status(200).json({
-        ok:true,
-        dataTotals: [
-            {label: "Total Modelos: ", value:  totalModelosAffected.totalIdModelos},
-            {label: "Total Modelos de Tipos de Equipos: ", value: totalModelosAffected.totalModelosTipos},
-            {label: "Total Modelos de Equipos: ", value: totalModelosAffected.totalModeloEquipos},
-        
-    ]
-    })
-
-
-
-})
-
-
-
-//TODO POST DELETE MODELOS
-routeAdmin.post("/equipos/modelos/delete/:id", isAuthLogin(1), async (req,res)=>{
-     
-    const id= parseInt(req.params.id)
-    
-    const [idModelosEquipos]= await pool.query("select id_modelo_equipo from modelo_equipos")
-
-    const [[idSearchValue]]= await pool.query("select id_modelo_equipo, modelo from modelo_equipos where id_modelo_equipo= ?", [id])
-
-    const numbersId=idModelosEquipos.map(id => id.id_modelo_equipo)
-
-    if(!numbersId.includes(id)){
-        return res.redirect("/admin/equipos")
-    }
-
-    const [deleteDireccion]= await pool.query("delete from modelo_equipos where id_modelo_equipo= ?", [id])
-
-    if(deleteDireccion.affectedRows > 0){
-        
-        return res.status(200).json({
-             ok:true,
-             message: `Se han borrado todos los registros de ${idSearchValue.modelo}`,
-             redirect:"/admin/equipos"
-        })
-
-    }else{
-        
-        return res.status(400).json({
-            ok:false,
-            message: `Hubo un error a la hora de eliminar los registros`,
-            redirect:"/admin/equipos"
-        })
-    }
-
-
-
-})
-
-
-
-
-
-
-
-
-
-
-
-
-
-//TODO GET DELETE MARCAS
-
-
-routeAdmin.get("/equipos/marcas/delete/:id", isAuthLogin(1), async (req, res)=>{
-    
-    const id= parseInt(req.params.id)
-
-    const [idMarcas]= await pool.query("select id_marca_equipo from marca_equipos")
-
-    const idNumbers= idMarcas.map(m => m.id_marca_equipo)
-
-    const [[totalModelosAffected]]= await pool.query("select count(*) as totalIdMarcas, (select count(*) from modelo_equipos where marca_equipo= ?) as totalModelosEquipos, (select count(*) from tipo_equipos t inner join modelo_equipos me on me.id_modelo_equipo= t.modelo_equipo where me.marca_equipo= ?) as totalTiposEquipo, (select count(*) from equipos e inner join tipo_equipos ti on ti.id_tipo_equipo= e.tipo_equipo inner join modelo_equipos me on me.id_modelo_equipo= ti.modelo_equipo where me.marca_equipo= ?) as totalMarcasEquipo from marca_equipos where id_marca_equipo= ?", [id,id, id, id])
-
-
-    if(!idNumbers.includes(id)){
-        return res.redirect("/admin/equipos")
-    
-    } 
-    
-    return res.status(200).json({
-        ok:true,
-        dataTotals: [
-            {label: "Total Marcas: ", value:  totalModelosAffected.totalIdMarcas},
-            {label: "Total Marcas de Equipos: ", value: totalModelosAffected.totalModelosEquipos},
-            {label: "Total Marcas de Tipos de Equipos: ", value: totalModelosAffected.totalTiposEquipo},
-            {label: "Total Marcas de Equipos: ", value: totalModelosAffected.totalMarcasEquipo},
-        
-    ]
-    })
-
-
-
-})
-
-
-
-//TODO POST DELETE MARCAS
-routeAdmin.post("/equipos/marcas/delete/:id", isAuthLogin(1), async (req,res)=>{
-     
-    const id= parseInt(req.params.id)
-    
-    const [idMarcasEquipos]= await pool.query("select id_marca_equipo from marca_equipos")
-
-    const [[idSearchValue]]= await pool.query("select id_marca_equipo, marca_equipo from marca_equipos where id_marca_equipo= ?", [id])
-
-    const numbersId=idMarcasEquipos.map(id => id.id_marca_equipo)
-
-    if(!numbersId.includes(id)){
-        return res.redirect("/admin/equipos")
-    }
-
-    const [deleteDireccion]= await pool.query("delete from marca_equipos where id_marca_equipo= ?", [id])
-
-    if(deleteDireccion.affectedRows > 0){
-        
-        return res.status(200).json({
-             ok:true,
-             message: `Se han borrado todos los registros de ${idSearchValue.marca_equipo}`,
-             redirect:"/admin/equipos"
-        })
-
-    }else{
-        
-        return res.status(400).json({
-            ok:false,
-            message: `Hubo un error a la hora de eliminar los registros`,
-            redirect:"/admin/equipos"
-        })
-    }
-
-
-
-})
 
 
 
@@ -3054,11 +2898,11 @@ routeAdmin.get("/consumibles", isAuthLogin(1), async (req, res)=>{
 
  let tiposConsumiblesAll= []
 
- const [tiposConsumibles] = await pool.query("select id_tipo_consumibles, tipo_consumible from tipo_consumibles")
+ const [tiposConsumibles] = await pool.query("select id_tipo_consumibles, tipo_consumible, estado from tipo_consumibles")
 
- const [consumibleSearch]= await pool.query("select id_tipo_consumibles, tipo_consumible from tipo_consumibles where tipo_consumible= ?", [tipoconsumible])
+ const [consumibleSearch]= await pool.query("select id_tipo_consumibles, tipo_consumible, estado from tipo_consumibles where tipo_consumible= ?", [tipoconsumible])
 
- const [consumiblesOrder]= await pool.query("select id_tipo_consumibles, tipo_consumible from tipo_consumibles order by tipo_consumible desc")
+ const [consumiblesOrder]= await pool.query("select id_tipo_consumibles, tipo_consumible, estado from tipo_consumibles order by tipo_consumible desc")
 
  tiposConsumiblesAll= tiposConsumibles
  
@@ -3066,6 +2910,9 @@ if(tipoconsumible && tipoconsumible.length > 0) tiposConsumiblesAll= consumibleS
 
 if(ordertipoConsumible && ordertipoConsumible.length > 0) tiposConsumiblesAll= consumiblesOrder
 
+//todo tipo consumibles list active forms
+
+const [tiposConsumiblesActive]= await pool.query("select id_tipo_consumibles, tipo_consumible from tipo_consumibles where estado= 'ACTIVO' ")
 
 
 //?  MARCAS CONSUMIBLES
@@ -3076,11 +2923,11 @@ const orderMarca= req.query.orderMarcaConsumible
 
 let marcasConsumiblesAll= []
 
-const [marcasConsumibles]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles")
+const [marcasConsumibles]= await pool.query("select id_marca_consumible, marca_consumible, estado from marca_consumibles")
 
-const [marcaConsumibleSearch]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles where marca_consumible= ?", [marcaConsumible])
+const [marcaConsumibleSearch]= await pool.query("select id_marca_consumible, marca_consumible, estado from marca_consumibles where marca_consumible= ?", [marcaConsumible])
 
-const [marcasConsumiblesOrder]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles order by marca_consumible desc")
+const [marcasConsumiblesOrder]= await pool.query("select id_marca_consumible, marca_consumible, estado from marca_consumibles order by marca_consumible desc")
 
 
 marcasConsumiblesAll= marcasConsumibles
@@ -3089,7 +2936,9 @@ if(marcaConsumible && marcaConsumible.length > 0 ) marcasConsumiblesAll= marcaCo
 
 if(orderMarca && orderMarca.length > 0) marcasConsumiblesAll= marcasConsumiblesOrder
 
+//todo marcas list active forms
 
+const [marcasActive]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles where estado='ACTIVO'")
 
 
 //? CONSUMIBLES
@@ -3101,11 +2950,11 @@ const orderConsumible= req.query.orderConsumible
 
 let consumiblesAll= []
 
-const [consumibles]= await pool.query("select c.id_consumible,t.tipo_consumible, m.marca_consumible, c.consumible from consumibles c inner join marca_consumibles m on m.id_marca_consumible= c.marca_consumible inner join tipo_consumibles t on t.id_tipo_consumibles= c.tipo_consumible")
+const [consumibles]= await pool.query("select c.id_consumible,t.tipo_consumible, m.marca_consumible, c.consumible, c.estado from consumibles c inner join marca_consumibles m on m.id_marca_consumible= c.marca_consumible inner join tipo_consumibles t on t.id_tipo_consumibles= c.tipo_consumible")
 
-const [consumibleSearchQuery]= await pool.query("select c.id_consumible,t.tipo_consumible, m.marca_consumible, c.consumible from consumibles c inner join marca_consumibles m on m.id_marca_consumible= c.marca_consumible inner join tipo_consumibles t on t.id_tipo_consumibles= c.tipo_consumible where c.consumible= ?", [consumibleQuery])
+const [consumibleSearchQuery]= await pool.query("select c.id_consumible,t.tipo_consumible, m.marca_consumible, c.consumible, c.estado from consumibles c inner join marca_consumibles m on m.id_marca_consumible= c.marca_consumible inner join tipo_consumibles t on t.id_tipo_consumibles= c.tipo_consumible where c.consumible= ?", [consumibleQuery])
 
-const [consumibleOrder]= await pool.query("select c.id_consumible,t.tipo_consumible, m.marca_consumible, c.consumible from consumibles c inner join marca_consumibles m on m.id_marca_consumible= c.marca_consumible inner join tipo_consumibles t on t.id_tipo_consumibles= c.tipo_consumible order by c.consumible desc")
+const [consumibleOrder]= await pool.query("select c.id_consumible,t.tipo_consumible, m.marca_consumible, c.consumible, c.estado from consumibles c inner join marca_consumibles m on m.id_marca_consumible= c.marca_consumible inner join tipo_consumibles t on t.id_tipo_consumibles= c.tipo_consumible order by c.consumible desc")
 
 
 consumiblesAll= consumibles
@@ -3152,7 +3001,7 @@ res.render("admin/consumibles.pug",{
              containerData:{ 
                 title: "TIPO DE CONSUMIBLE",
                 idField: "id_tipo_consumibles",
-                headTitles:["Tipo de Consumible"],
+                headTitles:["Tipo de Consumible", "Estado"],
                 hrefRute:"/admin/consumibles/tipo/edit",
                 hrefRuteDelete:"/admin/consumibles/tipo/delete",
                 optionsBtn: [{
@@ -3183,13 +3032,20 @@ res.render("admin/consumibles.pug",{
             formShowAdd:{
                 idForm: "formAddTipoConsumible",
                 title:"TIPO DE CONSUMIBLE",
-                selected: [],
+                selected: [ {
+                    id:"selectEstado",
+                    name:"estado",
+                    class__icon:"fas fa-shield-alt",
+                    defaultOption:"Selecciona un Estado",
+                    options:[{ value:"ACTIVO",valueText:"ACTIVO"},{value:"INACTIVO",valueText:"INACTIVO"}]
+                    
+             }],
                 valueSubmit:"AGREGAR TIPO"
             },
             formShowInputs:[{
                 id:"tipo_de_equipo",
                 classIcon:"fas fa-pencil-alt",
-                type:"text",
+                 type:"text",
                 placeholder:"Escribe el Tipo del Consumible",
                 name:"tipo_consumible",
             }], 
@@ -3204,7 +3060,7 @@ res.render("admin/consumibles.pug",{
                 idField: "id_marca_consumible",
                 hrefRute:"/admin/consumibles/marca/edit",
                 hrefRuteDelete:"/admin/consumibles/marca/delete",
-                headTitles:["Marca de Consumible"],
+                headTitles:["Marca de Consumible", "Estado"],
                 optionsBtn: [{
                     Title:"Agregar",
                     contentText:"Agregar Marca",
@@ -3233,7 +3089,14 @@ res.render("admin/consumibles.pug",{
             formShowAdd2:{
                 idForm: "formAddMarcaConsumible",
                 title:"MARCA DE CONSUMIBLE",
-                selected: [],
+                selected: [ {
+                    id:"selectUserEstado",
+                    name:"estado",
+                    class__icon:"fas fa-shield-alt",
+                    defaultOption:"Selecciona un Estado",
+                    options:[{ value:"ACTIVO",valueText:"ACTIVO"},{value:"INACTIVO",valueText:"INACTIVO"}]
+                    
+             }],
                 valueSubmit:"AGREGAR MARCA"
             },
             formShowInputs2:[{
@@ -3252,7 +3115,7 @@ res.render("admin/consumibles.pug",{
             containerData3:{ 
                 title: "CONSUMIBLES",
                 idField: "id_consumible",
-                headTitles:["Tipo de Consumible", "Marca de Consumible", "Consumible"],
+                headTitles:["Tipo de Consumible", "Marca de Consumible", "Consumible", "Estado"],
                 hrefRute:"/admin/consumibles/consumible/edit",
                 hrefRuteDelete:"/admin/consumibles/consumible/delete",
                 optionsBtn: [{
@@ -3288,7 +3151,7 @@ res.render("admin/consumibles.pug",{
                     class__icon:"fas fa-pencil-alt",
                     name:"marca_consumible",
                     defaultOption:"Seleccione una Marca",
-                    options:marcasConsumiblesAll.map(d => { return {
+                    options:marcasActive.map(d => { return {
                         value:d.id_marca_consumible,
                         valueText: d.marca_consumible
                     }})
@@ -3297,13 +3160,20 @@ res.render("admin/consumibles.pug",{
                     id:"tipoSelect",
                     class__icon:"fas fa-tint",
                     name:"tipo_consumible",
-                    defaultOption:"Seleccione un tipo de Equipo",
-                    options:tiposConsumiblesAll.map(d => { return {
+                    defaultOption:"Seleccione un tipo de Consumible",
+                    options:tiposConsumiblesActive.map(d => { return {
                         value:d.id_tipo_consumibles,
                         valueText: d.tipo_consumible
                     }})
-                }],
-            valueSubmit:"AGREGAR CONSUMIBLE"
+                }, {
+                    id:"selectUserEstado",
+                    name:"estado",
+                    class__icon:"fas fa-shield-alt",
+                    defaultOption:"Selecciona un Estado",
+                    options:[{ value:"ACTIVO",valueText:"ACTIVO"},{value:"INACTIVO",valueText:"INACTIVO"}]
+                    
+             }],
+            valueSubmit:"AGREGAR"
         },
         formShowInputs3:[{
                 id:"consumibleModel",
@@ -3335,7 +3205,7 @@ res.render("admin/consumibles.pug",{
 routeAdmin.post("/consumibles/consumible",isAuthLogin(1),bodyValidateConsumible, validateExpressErrors("/admin/consumibles"), async (req,res)=>{
     
 
-    const {tipo_consumible, marca_consumible,consumible}= req.body
+    const {tipo_consumible, marca_consumible,consumible, estado}= req.body
 
     const parseTipo= parseInt(tipo_consumible)
     
@@ -3355,7 +3225,37 @@ routeAdmin.post("/consumibles/consumible",isAuthLogin(1),bodyValidateConsumible,
     }
 
 
-    const [addConsumible]=  await pool.query("insert into consumibles SET ?", [{tipo_consumible:parseTipo, marca_consumible:parseMarca, consumible:consumible.toUpperCase()}])
+    //TODO VALIDATE  
+
+    const [[tipoConsumibleValidate]]= await pool.query("select tipo_consumible, estado from tipo_consumibles where id_tipo_consumibles= ?", [parseTipo])
+
+    const [[marcaConsumibleValidate]]= await pool.query("select marca_consumible, estado from marca_consumibles where id_marca_consumible= ?",[parseMarca])
+
+
+if(tipoConsumibleValidate.estado === "INACTIVO"){
+
+    return res.status(400).json({
+        ok:false,
+        message:`No puedes agregar, el tipo ${tipoConsumibleValidate.tipo_consumible} esta inactivo`,
+        redirect: "/admin/consumibles"
+    })
+}
+
+
+if(marcaConsumibleValidate.estado==="INACTIVO"){
+
+    return res.status(400).json({
+        ok:false,
+        message:`No puedes agregar, la marca ${marcaConsumibleValidate.marca_consumible} esta inactiva`,
+        redirect:"/admin/consumibles"
+    })
+}
+
+
+//? POST
+
+
+    const [addConsumible]=  await pool.query("insert into consumibles SET ?", [{tipo_consumible:parseTipo, marca_consumible:parseMarca, consumible:consumible.toUpperCase(), estado}])
 
     if(addConsumible.affectedRows > 0){
         
@@ -3389,7 +3289,7 @@ routeAdmin.post("/consumibles/consumible",isAuthLogin(1),bodyValidateConsumible,
 routeAdmin.post("/consumibles/tipos",isAuthLogin(1),bodyValidateTiposConsumuibles, validateExpressErrors("/admin/consumibles"), async (req,res)=>{
     
 
-    const {tipo_consumible}= req.body
+    const {tipo_consumible, estado}= req.body
 
     const [tipoSearch]= await pool.query("select id_tipo_consumibles, tipo_consumible from tipo_consumibles where tipo_consumible = ?", [tipo_consumible.toUpperCase()])
 
@@ -3404,7 +3304,7 @@ routeAdmin.post("/consumibles/tipos",isAuthLogin(1),bodyValidateTiposConsumuible
     }
 
 
-    const [addTipoConsumible]=  await pool.query("insert into tipo_consumibles SET ?", [{tipo_consumible:tipo_consumible.toUpperCase()}])
+    const [addTipoConsumible]=  await pool.query("insert into tipo_consumibles SET ?", [{tipo_consumible:tipo_consumible.toUpperCase(), estado}])
 
     if(addTipoConsumible.affectedRows > 0){
         
@@ -3434,7 +3334,7 @@ routeAdmin.post("/consumibles/tipos",isAuthLogin(1),bodyValidateTiposConsumuible
 routeAdmin.post("/consumibles/marca",isAuthLogin(1),bodyValidateMarcasConsumibles, validateExpressErrors("/admin/consumibles"), async (req,res)=>{
     
 
-    const {marca_consumible}= req.body
+    const {marca_consumible, estado}= req.body
 
     const [marcaSearch]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles where marca_consumible = ?", [marca_consumible.toUpperCase()])
 
@@ -3449,7 +3349,7 @@ routeAdmin.post("/consumibles/marca",isAuthLogin(1),bodyValidateMarcasConsumible
     }
 
 
-    const [addTipoConsumible]=  await pool.query("insert into marca_consumibles SET ?", [{marca_consumible:marca_consumible.toUpperCase()}])
+    const [addTipoConsumible]=  await pool.query("insert into marca_consumibles SET ?", [{marca_consumible:marca_consumible.toUpperCase(), estado}])
 
     if(addTipoConsumible.affectedRows > 0){
         
@@ -3497,12 +3397,14 @@ if(!numbers.includes(id)){
     
 }
 
+//? LIST SELECT
+const [marcaConsumibles]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles where estado= 'ACTIVO'")
 
-const [marcaConsumibles]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles")
+const [tiposConsumibles]= await pool.query("select id_tipo_consumibles, tipo_consumible from tipo_consumibles where estado= 'ACTIVO'")
 
-const [tiposConsumibles]= await pool.query("select id_tipo_consumibles, tipo_consumible from tipo_consumibles")
 
-const [consumibleSearch]= await pool.query("select c.id_consumible, t.tipo_consumible, m.marca_consumible, c.consumible from consumibles c inner join tipo_consumibles t on t.id_tipo_consumibles = c.tipo_consumible inner join marca_consumibles m on m.id_marca_consumible = c.marca_consumible where c.id_consumible= ?",[id])
+
+const [consumibleSearch]= await pool.query("select c.id_consumible, t.tipo_consumible, m.marca_consumible, c.consumible, c.estado from consumibles c inner join tipo_consumibles t on t.id_tipo_consumibles = c.tipo_consumible inner join marca_consumibles m on m.id_marca_consumible = c.marca_consumible where c.id_consumible= ?",[id])
 
 
 res.render("Edits/edits.pug",{
@@ -3569,7 +3471,15 @@ res.render("Edits/edits.pug",{
                         value:t.id_tipo_consumibles,
                         text:t.tipo_consumible
                 }})
-                },
+                },{
+                    type:"select",
+                    placeholder:"Escribe el estado del usuario...",
+                    name:"estado",
+                    id:"estadoEdit",
+                    labelTitle:"Estado:",
+                    value:consumibleSearch[0].estado,
+                    options:[{value:"ACTIVO", valueText:"Activo"},{value:"INACTIVO", valueText:"Inactivo"}]
+                }
                 
             ]
 
@@ -3605,7 +3515,7 @@ if(!numbers.includes(id)){
     
 }
 
-const [tipoSearch]= await pool.query("select id_tipo_consumibles, tipo_consumible from tipo_consumibles where id_tipo_consumibles= ?",[id])
+const [tipoSearch]= await pool.query("select id_tipo_consumibles, tipo_consumible, estado from tipo_consumibles where id_tipo_consumibles= ?",[id])
 
 
 res.render("Edits/edits.pug",{
@@ -3652,6 +3562,14 @@ res.render("Edits/edits.pug",{
                     id:"tipoedit",
                     labelTitle:"Tipo de Consumible:",
                     value:tipoSearch[0].tipo_consumible
+                },{
+                    type:"select",
+                    placeholder:"Escribe el estado del usuario...",
+                    name:"estado",
+                    id:"estadoEdit",
+                    labelTitle:"Estado:",
+                    value:tipoSearch[0].estado,
+                    options:[{value:"ACTIVO", valueText:"Activo"},{value:"INACTIVO", valueText:"Inactivo"}]
                 }
                 
             ]
@@ -3670,7 +3588,7 @@ routeAdmin.get("/consumibles/marca/edit/:id", isAuthLogin(1), async (req, res)=>
 
 const id= parseInt(req.params.id)
 
-const [idMarcas]= await pool.query("select id_marca_consumible from marca_consumibles")
+const [idMarcas]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles")
 
 const numbers= idMarcas.map(t => t.id_marca_consumible)
 
@@ -3685,7 +3603,7 @@ if(!numbers.includes(id)){
     
 }
 
-const [marcaSearch]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles where id_marca_consumible= ?",[id])
+const [marcaSearch]= await pool.query("select id_marca_consumible, marca_consumible, estado from marca_consumibles where id_marca_consumible= ?",[id])
 
 
 res.render("Edits/edits.pug",{
@@ -3731,7 +3649,15 @@ res.render("Edits/edits.pug",{
                     name:"marca_consumible",
                     id:"marcaedit",
                     labelTitle:"Marca de Consumible:",
-                    value:marcaSearch[0].marca_consumible
+                    value:marcaSearch[0].marca_consumible,
+                },{
+                    type:"select",
+                    placeholder:"Escribe el estado del usuario...",
+                    name:"estado",
+                    id:"estadoEdit",
+                    labelTitle:"Estado:",
+                    value:marcaSearch[0].estado,
+                    options:[{value:"ACTIVO", valueText:"Activo"},{value:"INACTIVO", valueText:"Inactivo"}]
                 }
                 
             ]
@@ -3758,7 +3684,7 @@ routeAdmin.post("/consumibles/consumible/edit/:id", isAuthLogin(1), bodyValidate
 
 const id= parseInt(req.params.id)
 
-const {consumible, tipo_consumible, marca_consumible}= req.body
+const {consumible, tipo_consumible, marca_consumible, estado}= req.body
 
 const parseTipo= parseInt(tipo_consumible)
 
@@ -3792,7 +3718,36 @@ if (consumibleSearch.length > 0 ){
 }
 
 
-const [updateConsumible]= await pool.query("update consumibles set ? where id_consumible= ?", [{tipo_consumible: parseTipo, marca_consumible: parseMarca, consumible: consumible.toUpperCase()}, id])
+//TODO VALIDATE ESTADO TIPOS AND MARCA CONSUMIBLE
+
+const [[tipoConsumibleValidate]]= await pool.query("select tipo_consumible, estado from tipo_consumibles where id_tipo_consumibles= ?", [parseTipo])
+
+const [[marcaConsumibleValidate]]= await pool.query("select marca_consumible, estado from marca_consumibles where id_marca_consumible= ?",[parseMarca])
+
+
+if(tipoConsumibleValidate.estado === "INACTIVO"){
+
+    return res.status(400).json({
+        ok:false,
+        message:`No puedes modificar, el tipo ${tipoConsumibleValidate.tipo_consumible} esta inactivo`,
+        redirect: "/admin/consumibles"
+    })
+}
+
+
+if(marcaConsumibleValidate.estado==="INACTIVO"){
+
+    return res.status(400).json({
+        ok:false,
+        message:`No puedes modificar, la marca ${marcaConsumibleValidate.marca_consumible} esta inactiva`,
+        redirect:"/admin/consumibles"
+    })
+}
+
+
+
+//? update
+const [updateConsumible]= await pool.query("update consumibles set ? where id_consumible= ?", [{tipo_consumible: parseTipo, marca_consumible: parseMarca, consumible: consumible.toUpperCase(), estado}, id])
 
 
 if (updateConsumible.affectedRows > 0){
@@ -3828,7 +3783,7 @@ routeAdmin.post("/consumibles/tipo/edit/:id", isAuthLogin(1), bodyValidateTiposC
 
 const id= parseInt(req.params.id)
 
-const {tipo_consumible}= req.body
+const {tipo_consumible, estado}= req.body
 
 const [idTipos]= await pool.query("select id_tipo_consumibles from tipo_consumibles")
 
@@ -3858,7 +3813,7 @@ if (tipoSearch.length > 0 ){
 }
 
 
-const [updateTipo]= await pool.query("update tipo_consumibles set ? where id_tipo_consumibles= ?", [{tipo_consumible:tipo_consumible.toUpperCase()}, id])
+const [updateTipo]= await pool.query("update tipo_consumibles set ? where id_tipo_consumibles= ?", [{tipo_consumible:tipo_consumible.toUpperCase(), estado}, id])
 
 
 if (updateTipo.affectedRows > 0){
@@ -3891,7 +3846,7 @@ routeAdmin.post("/consumibles/marca/edit/:id", isAuthLogin(1), bodyValidateMarca
 
 const id= parseInt(req.params.id)
 
-const {marca_consumible}= req.body
+const {marca_consumible, estado}= req.body
 
 const [idMarcas]= await pool.query("select id_marca_consumible from marca_consumibles")
 
@@ -3916,12 +3871,12 @@ if (marcaSearch.length > 0 ){
     return  res.status(400).json({
         ok:false,
         message:`La marca de consumible ${marca_consumible} ya existe`,
-        redirect:"/admin/consumibles"
+        redirect:"/admin/consumibles" 
     })
 }
 
 
-const [updateTipo]= await pool.query("update marca_consumibles set ? where id_marca_consumible= ?", [{marca_consumible:marca_consumible.toUpperCase()}, id])
+const [updateTipo]= await pool.query("update marca_consumibles set ? where id_marca_consumible= ?", [{marca_consumible:marca_consumible.toUpperCase(), estado}, id])
 
 
 if (updateTipo.affectedRows > 0){
@@ -3946,208 +3901,12 @@ if (updateTipo.affectedRows > 0){
 
 
 
+ 
 
 
 
 
 
-
-
-
-
-
-
-
-
-//TODO GET DELETE TIPO CONSUMIBLE
-
-routeAdmin.get("/consumibles/tipo/delete/:id", isAuthLogin(1), async (req, res)=>{
-    
-    const id= parseInt(req.params.id)
-
-    const [idTiposConsumibles]= await pool.query("select id_tipo_consumibles from tipo_consumibles")
-
-    const idNumbers= idTiposConsumibles.map(tipo => tipo.id_tipo_consumibles)
-
-    const [[totalTiposAffected]]= await pool.query("select count(*) as totalIdTipos, (select count(*) from consumibles where tipo_consumible= ?) as totalTiposConsumibles from tipo_consumibles where id_tipo_consumibles= ?", [id,id])
-
-
-    if(!idNumbers.includes(id)){
-        return res.redirect("/admin/equipos")
-    
-    } 
-    
-    return res.status(200).json({
-        ok:true,
-        dataTotals: [
-            {label: "Total tipos: ", value:  totalTiposAffected.totalIdTipos},
-            {label: "Total tipos de Consumible: ", value: totalTiposAffected.totalTiposConsumibles}
-        
-    ]
-    })
-
-
-
-})
-
-
-
-//TODO POST DELETE TIPO CONSUMIBLE
-
-routeAdmin.post("/consumibles/tipo/delete/:id", isAuthLogin(1), async (req,res)=>{
-     
-    const id= parseInt(req.params.id)
-    
-    const [idTiposConsumibles]= await pool.query("select id_tipo_consumibles from tipo_consumibles")
-
-    const [[idSearchValue]]= await pool.query("select id_tipo_consumibles, tipo_consumible from tipo_consumibles where id_tipo_consumibles= ?", [id])
-
-    const numbersId=idTiposConsumibles.map(id => id.id_tipo_consumibles)
-
-    if(!numbersId.includes(id)){
-        return res.redirect("/admin/consumibles")
-    }
-
-    const [deleteDireccion]= await pool.query("delete from tipo_consumibles where id_tipo_consumibles= ?", [id])
-
-    if(deleteDireccion.affectedRows > 0){
-        
-        return res.status(200).json({
-             ok:true,
-             message: `Se han borrado todos los registros de ${idSearchValue.tipo_consumible}`,
-             redirect:"/admin/consumibles"
-        })
-
-    }else{
-        
-        return res.status(400).json({
-            ok:false,
-            message: `Hubo un error a la hora de eliminar los registros`,
-            redirect:"/admin/consumibles"
-        })
-    }
-
-
-
-})
-
-
-
-
-
-
-
-
-
-
-
-
-//TODO GET DELETE MARCAS CONSUMIBLES
-
-routeAdmin.get("/consumibles/marca/delete/:id", isAuthLogin(1), async (req, res)=>{
-    
-    const id= parseInt(req.params.id)
-
-    const [idMarcasConsumibles]= await pool.query("select id_marca_consumible from marca_consumibles")
-
-    const idNumbers= idMarcasConsumibles.map(tipo => tipo.id_marca_consumible)
-
-    const [[totalMarcasAffected]]= await pool.query("select count(*) as totalIdMarcas, (select count(*) from consumibles where marca_consumible= ?) as totalMarcasConsumibles from marca_consumibles where id_marca_consumible= ?", [id,id])
-
-
-    if(!idNumbers.includes(id)){
-        return res.redirect("/admin/equipos")
-    
-    } 
-    
-    return res.status(200).json({
-        ok:true,
-        dataTotals: [
-            {label: "Total Marcas: ", value:  totalMarcasAffected.totalIdMarcas},
-            {label: "Total Marcas de Consumible: ", value: totalMarcasAffected.totalMarcasConsumibles}
-        
-    ]
-    })
-
-
-
-})
-
-routeAdmin.post("/consumibles/marca/delete/:id", isAuthLogin(1), async (req,res)=>{
-     
-    const id= parseInt(req.params.id)
-    
-    const [idMarcasConsumibles]= await pool.query("select id_marca_consumible from marca_consumibles")
-
-    const [[idSearchValue]]= await pool.query("select id_marca_consumible, marca_consumible from marca_consumibles where id_marca_consumible= ?", [id])
-
-    const numbersId=idMarcasConsumibles.map(id => id.id_marca_consumible)
-
-    if(!numbersId.includes(id)){
-        return res.redirect("/admin/consumibles")
-    }
-
-    const [deleteDireccion]= await pool.query("delete from marca_consumibles where id_marca_consumible= ?", [id])
-
-    if(deleteDireccion.affectedRows > 0){
-        
-        return res.status(200).json({
-             ok:true,
-             message: `Se han borrado todos los registros de ${idSearchValue.marca_consumible}`,
-             redirect:"/admin/consumibles"
-        })
-
-    }else{
-        
-        return res.status(400).json({
-            ok:false,
-            message: `Hubo un error a la hora de eliminar los registros`,
-            redirect:"/admin/consumibles"
-        })
-    }
-
-
-
-})
-
-
-
-
-
-
-
-
-//TODO GET DELETE CONSUMIBLES
-
-
-routeAdmin.get("/consumibles/consumible/delete/:id", isAuthLogin(1), async (req, res)=>{
-    
-    const id= parseInt(req.params.id)
-
-    const [idConsumibles]= await pool.query("select id_consumible from consumibles")
-
-    const idNumbers= idConsumibles.map(tipo => tipo.id_consumible)
-
-    const [[totalConsumiblesAffected]]= await pool.query("select count(*) as totalIdConsumibles, (select count(*) from consumible_equipos where id_consumible= ?) as totalConsumibles from consumibles where id_consumible= ?", [id,id])
-
-
-    if(!idNumbers.includes(id)){
-        return res.redirect("/admin/equipos")
-    
-    } 
-    
-    return res.status(200).json({
-        ok:true,
-        dataTotals: [
-            {label: "Total Consumible: ", value:  totalConsumiblesAffected.totalIdConsumibles},
-            {label: "Total Consumible Equipos: ", value: totalConsumiblesAffected.totalConsumibles}
-        
-    ]
-    })
-
-
-
-})
 
 
 

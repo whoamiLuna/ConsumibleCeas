@@ -188,7 +188,7 @@ RouterAuth.post("/signUp",
 //?restrict
 RouterAuth.get("/restrict",(req,res)=>{
 
-    res.send("NO autorizado")
+    res.render("temp/autorizacion.pug")
 })
 
 

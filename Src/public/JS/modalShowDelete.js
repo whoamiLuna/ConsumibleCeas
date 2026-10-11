@@ -31,25 +31,28 @@ async function modalShowDelete({ btnFetch}){
                 if (request.ok){    
                     const response= await request.json()
                     
-                    $modalContentData.innerHTML=`  `
-                    
-                    response.dataTotals.forEach(total => {
+                    if(response.dataTotals && response.dataTotals.length > 0){
+
+                        $modalContentData.innerHTML=`  `
                         
-                        const $divModalData= document.createElement("div")
-                        $divModalData.classList.add("modalDelete__contentData-data")
-                        
-                        $divModalData.innerHTML=`
-                        <span class="contentData__data-data key">${total.label}</span>
-                        <span class="contentData__data-data value">${total.value}</span>
-                        `
-                        
-                        $fragmentValuesDelete.appendChild($divModalData)
-                        
-                        $modalContentData.appendChild($fragmentValuesDelete) 
-                    });
-                    
+                        response.dataTotals.forEach(total => {
+                            
+                            const $divModalData= document.createElement("div")
+                            $divModalData.classList.add("modalDelete__contentData-data")
+                            
+                            $divModalData.innerHTML=`
+                            <span class="contentData__data-data key">${total.label}</span>
+                            <span class="contentData__data-data value">${total.value}</span>
+                            `
+                            
+                            $fragmentValuesDelete.appendChild($divModalData)
+                            
+                        });
+
+                        $modalContentData.appendChild($fragmentValuesDelete)
+
+                    }
                 
-            
                 }else{
                     
                 

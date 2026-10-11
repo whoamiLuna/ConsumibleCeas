@@ -5,7 +5,6 @@ mixin tableContent(dataContent, dataHead, actions, idField, textNotFound)
     if dataContent && dataContent.length > 0 && dataHead && dataHead.length > 0
         article.tableContent
             div.tableContent__head
-                div.tableContent__head-head
                     div.tableContent__head-th No.                
                     each head in dataHead
                         div.tableContent__head-th= head.valueHeadText                   

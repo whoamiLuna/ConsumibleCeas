@@ -81,7 +81,6 @@ app.use((req,res,next)=>{
     console.log(">>> MIDDLEWARE:", req.method, req.originalUrl);
     console.log("Body recibido:", req.body)
     res.locals.user = req.user
-    
     next()
     
     
