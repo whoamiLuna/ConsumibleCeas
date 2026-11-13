@@ -27,6 +27,9 @@ const pwd = fileURLToPath(import.meta.url)
 //TODO RUTE DIRECTORY FILE PDF
 const pdfDocumentation = join(dirname(pwd), "../public/doc/726990607304.pdf")
 
+//TODO ROUTER
+const routeAdmin = Router()
+
 
 //TODO CONSTANTE TIPOS DE EQUIPOS FOR ALL
 const tiposEquiposManual = [{
